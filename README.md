@@ -15,8 +15,6 @@ However, keep in mind that this code isn't _exactly_ what you need for Sprint 2.
 
 Historical note: 0320 had previously used Gson for serializing/deserializing Json, but Gson seems to now be in maintainance mode, and doesn't support records well. So we switched for Fall 2022.
 
-**TODO: add CORS boilerplate**
-
 ## Setup 
 
 You'll need two dependencies for handling Json: `moshi` and `moshi-adapters`, both from `com.squareup.moshi`. You should be able to copy and paste them from the `pom.xml` of this project. Similarly, you'll depend on SparkJava: `spark-core` from `com.sparkjava`. 
