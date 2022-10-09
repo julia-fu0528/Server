@@ -57,7 +57,7 @@ Run the `Server` and confirm that you are able to make web queries from your bro
 
 Right now, the `order` request produces whichever set of ingredients appears first in the menu set. How would you modify the code so that an `order` could contain the name of a soup, and that soup could be retrieved? 
 
- Hint: You can get a _parameter_ of the request via `request.params()` in the handler method. E.g., if you call the parameter `soupname`, you'd use `request.params().get("soupname")`. 
+ Hint: You can get a _parameter_ of the request via `request.queryParams()` in the handler method. E.g., if you call the parameter `soupname`, you'd use `request.queryParams("soupname")`. Note that this was originally written with a typo, referring to the `params` method rather than `queryParams`. These are different. Ed post 430 corrected the issue. 
  
 Remember also that you're allowed to modify this code, but you shouldn't need to alter most classes (or even really understand them yet). What _do_ you need to modify? 
 
