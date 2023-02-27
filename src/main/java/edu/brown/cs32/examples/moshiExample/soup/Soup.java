@@ -18,9 +18,15 @@ public class Soup {
      * Note: making the field `final` only keeps us from overwriting the map itself, *not* its contents!
      *
      */
+    public String soupName;
     final private Set<Ingredient> contents = new HashSet<>();
     final boolean timidChef;
-
+    public void setSoupName(String soupName){
+        this.soupName = soupName;
+    }
+    public String getSoupName(){
+        return this.soupName;
+    }
     public Soup(boolean timidChef) {
         this.timidChef = timidChef;
     }
