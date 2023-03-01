@@ -55,19 +55,17 @@ public class OrderHandler implements Route {
             System.out.println(soup.getSoupName());
             // Just make the first one
             //if (name.equalsIgnoreCase("carrotsoup")){
-            if (soup.getSoupName().equals(soupname)){
+            if (soup.getSoupName().equals(soupname)) {
                 System.out.println("this is soup0" + soup);
                 toPrint = soup;
             }
-            //return new SoupSuccessResponse(soup.ingredients()).serialize();
-            try {
-                return new SoupSuccessResponse(toPrint.ingredients()).serialize();
-
-            }catch(Exception e){
-                return new SoupNoRecipesFailureResponse().serialize();
-            }
         }
-        return new SoupNoRecipesFailureResponse().serialize();
+        //return new SoupSuccessResponse(soup.ingredients()).serialize();
+        try {
+            return new SoupSuccessResponse(toPrint.ingredients()).serialize();
+        } catch (Exception e) {
+            return new SoupNoRecipesFailureResponse().serialize();
+        } //return new SoupNoRecipesFailureResponse().serialize();
         // NOTE: beware this "return Object" and "throws Exception" idiom. We need to follow it because
         //   the library uses it, but in general this is lowers the protection of the type system.
     }
