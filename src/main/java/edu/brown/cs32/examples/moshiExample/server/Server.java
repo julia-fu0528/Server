@@ -56,7 +56,9 @@ public class Server {
         });
 
         // Setting up the handler for the GET /order endpoint
-        Spark.get("order", new OrderHandler(menu));
+        Spark.get("loadcsv", new OrderHandler(menu));
+        Spark.get("viewcsv", new OrderHandler(menu));
+        Spark.get("searchcsv", new OrderHandler(menu));
         Spark.init();
         Spark.awaitInitialization();
         System.out.println("Server started.");
