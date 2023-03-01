@@ -3,7 +3,7 @@ package edu.brown.cs32.examples.moshiExample.server;
 import Exceptions.NoFileStoredException;
 
 public class LoadedFiles<T>{
-    T storage;
+    public T storage;
     public LoadedFiles(){
 
     }

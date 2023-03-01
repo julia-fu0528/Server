@@ -32,7 +32,7 @@ import java.util.Set;
  *
  */
 public class LoadHandler implements Route {
-    private final LoadedFiles<List<List<String>>> loaded;
+    public LoadedFiles<List<List<String>>> loaded;
 
     /**
      * Constructor accepts some shared state
