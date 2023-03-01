@@ -54,7 +54,7 @@ public class LoadHandler implements Route {
         // Request: when the client asks for something from the webpage (what your user sends)
         // Response: when the webpage gives sth. back (what you're constructing to return
         // QueryParamsMap qm = request.queryMap();
-        String filepath = request.queryParams("path");
+        String filepath = request.queryParams("filepath");
         if (filepath == null){
             return new MissingFilePathResponse().serialize();
         }
