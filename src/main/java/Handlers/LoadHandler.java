@@ -49,33 +49,6 @@ public class LoadHandler implements Route {
      * @return response content
      * @throws Exception This is part of the interface; we don't have to throw anything.
      */
-    //   @Override
-//    public Object handle(Request request, Response response) throws Exception {
-//        // Request: when the client asks for something from the webpage (what your user sends)
-//        // Response: when the webpage gives sth. back (what you're constructing to return)
-//        QueryParamsMap qm = request.queryMap();
-//        //String name = request.queryParams("soupname");
-//        String soupname = qm.value("soupname");
-//        Soup toPrint = null;
-//        System.out.println(soupname);
-//        for(Soup soup : menu) {
-//            System.out.println(soup.getSoupName());
-//            // Just make the first one
-//            //if (name.equalsIgnoreCase("carrotsoup")){
-//            if (soup.getSoupName().equals(soupname)) {
-//                System.out.println("this is soup0" + soup);
-//                toPrint = soup;
-//            }
-//        }
-//        //return new SoupSuccessResponse(soup.ingredients()).serialize();
-//        try {
-//            return new SoupSuccessResponse(toPrint.ingredients()).serialize();
-//        } catch (Exception e) {
-//            return new SoupNoRecipesFailureResponse().serialize();
-//        } //return new SoupNoRecipesFailureResponse().serialize();
-//        // NOTE: beware this "return Object" and "throws Exception" idiom. We need to follow it because
-//        //   the library uses it, but in general this is lowers the protection of the type system.
-//    }
     @Override
     public Object handle(Request request, Response response) throws Exception {
         // Request: when the client asks for something from the webpage (what your user sends)
@@ -87,14 +60,14 @@ public class LoadHandler implements Route {
         }
         //String filepath = qm.value("path");
         System.out.println(filepath);
-        FileReader toPrint = null;
+        FileReader toParse = null;
         try{
-            toPrint = new FileReader(filepath);
+            toParse = new FileReader(filepath);
         }catch(FileSystemNotFoundException e){
             return new InaccessibleCSVResponse(filepath).serialize();
         }
         //BufferedReader fr = new BufferedReader(new FileReader(filepath));
-        CSVParser parser = new CSVParser(toPrint, new ListCreator());
+        CSVParser parser = new CSVParser(toParse, new ListCreator());
         List<List<String>> csv_json;
         try {
             csv_json = parser.parse();

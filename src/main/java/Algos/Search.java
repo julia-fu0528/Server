@@ -1,5 +1,8 @@
 package Algos;
 
+import Exceptions.SearchFailureException;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class Search {
@@ -53,29 +56,29 @@ public class Search {
    * @param target String to look for
    * @param column String of column to look in (either a number or header title)
    */
-  public boolean searchTarget(String target, String column) {
+  public List<List<String>> searchTarget(String column, String target) throws SearchFailureException {
     //check if csv or target is empty and if so return false and print error
+    List<List<String>> rows  = new ArrayList<List<String>>();
     if (this.parsed.size() == 0) {
-      System.err.println("Empty CSV Parse");
-      return false;
+      throw new SearchFailureException("Empty CSV Parse");
     } else if (target.length() == 0) {
-      System.err.println("Empty search target");
-      return false;
+      throw new SearchFailureException("Empty search target");
     } else {
       //check if the column input is given as an integer or header
       if (isNumeric(column)) {
         //if integer make sure it is inbounds
         int c = Integer.parseInt(column);
         if (c < 0 || c > this.parsed.get(0).size()) {
-          System.err.println("Column out of bounds");
-          return false;
+          throw new SearchFailureException("Column out of bounds");
         }
         //search through rows in the given column for target
         for (int i = 0; i < this.parsed.size(); i++) {
-          if (this.parsed.get(i).get(c).equals(target)) {
+          List<String> this_row = this.parsed.get(i);
+          String this_value = this_row.get(c);
+          if (this_value.equals(target)) {
             //if found print and return true
-            System.out.println("Target was found in row " + (i + 1));
-            return true;
+            // System.out.println("Target was found in row " + (i + 1));
+            rows.add(this_row);
           }
         }
       } else {
@@ -84,20 +87,21 @@ public class Search {
         int c = checkHeaders(headers, column);
         //if header does not exist print error and return false
         if (c == -1) {
-          System.err.println("Header not found ");
-          return false;
+          throw new SearchFailureException("Header not found ");
         }
         //search through rows in the given column for target (starting after headers)
         for (int i = 1; i < this.parsed.size(); i++) {
-          if (this.parsed.get(i).get(c).equals(target)) {
-            System.out.println("Target was found in row " + (i + 1));
-            return true;
+          List<String> this_row = this.parsed.get(i);
+          String this_value = this_row.get(c);
+          if (this_value.equals(target)) {
+            // System.out.println("Target was found in row " + (i + 1));
+            rows.add(this_row);
           }
         }
       }
       //if not found print error return false
-      System.out.println("Target could not be found.");
-      return false;
+      // System.out.println("Target could not be found.");
+      return rows;
     }
   }
 
