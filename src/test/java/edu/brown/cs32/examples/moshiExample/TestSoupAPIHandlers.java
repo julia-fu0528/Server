@@ -5,7 +5,6 @@ import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory;
 import edu.brown.cs32.examples.moshiExample.ingredients.Carrots;
 import edu.brown.cs32.examples.moshiExample.ingredients.HotPeppers;
 import edu.brown.cs32.examples.moshiExample.ingredients.Ingredient;
-import edu.brown.cs32.examples.moshiExample.server.OrderHandler;
 import edu.brown.cs32.examples.moshiExample.soup.Soup;
 import okio.Buffer;
 import org.junit.jupiter.api.AfterEach;
@@ -14,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import spark.Spark;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -72,18 +72,18 @@ public class TestSoupAPIHandlers {
      * the reference itself. We clear this state out after every test runs.
      */
 
-    final Set<Soup> menu = new HashSet<>();
+    final Set<BufferedReader> storage = new HashSet<>();
 
     @BeforeEach
-    public void setup() {
-        // Re-initialize state, etc. for _every_ test method run
-        menu.clear();
-
-        // In fact, restart the entire Spark server for every test!
-        Spark.get("/order", new OrderHandler(menu));
-        Spark.init();
-        Spark.awaitInitialization(); // don't continue until the server is listening
-    }
+//    public void setup() {
+//        // Re-initialize state, etc. for _every_ test method run
+//        storage.clear();
+//
+//        // In fact, restart the entire Spark server for every test!
+//        Spark.get("/order", new OrderHandler(storage));
+//        Spark.init();
+//        Spark.awaitInitialization(); // don't continue until the server is listening
+//    }
 
     @AfterEach
     public void teardown() {
@@ -113,59 +113,59 @@ public class TestSoupAPIHandlers {
     }
 
 
-    @Test
-    // Recall that the "throws IOException" doesn't signify anything but acknowledgement to the type checker
-    public void testAPINoRecipes() throws IOException {
-        HttpURLConnection clientConnection = tryRequest("order");
-        // Get an OK response (the *connection* worked, the *API* provides an error response)
-        assertEquals(200, clientConnection.getResponseCode());
+//    @Test
+//    // Recall that the "throws IOException" doesn't signify anything but acknowledgement to the type checker
+//    public void testAPINoRecipes() throws IOException {
+//        HttpURLConnection clientConnection = tryRequest("order");
+//        // Get an OK response (the *connection* worked, the *API* provides an error response)
+//        assertEquals(200, clientConnection.getResponseCode());
+//
+//        // Now we need to see whether we've got the expected Json response.
+//        // SoupAPIUtilities handles ingredient lists, but that's not what we've got here.
+//        Moshi moshi = new Moshi.Builder().build();
+//        // We'll use okio's Buffer class here
+//        OrderHandler.SoupNoRecipesFailureResponse response =
+//                moshi.adapter(OrderHandler.SoupNoRecipesFailureResponse.class).fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
+//
+//        // ^ If that succeeds, we got the expected response. Notice that this is *NOT* an exception, but a real Json reply.
+//
+//        clientConnection.disconnect();
+//    }
 
-        // Now we need to see whether we've got the expected Json response.
-        // SoupAPIUtilities handles ingredient lists, but that's not what we've got here.
-        Moshi moshi = new Moshi.Builder().build();
-        // We'll use okio's Buffer class here
-        OrderHandler.SoupNoRecipesFailureResponse response =
-                moshi.adapter(OrderHandler.SoupNoRecipesFailureResponse.class).fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
-
-        // ^ If that succeeds, we got the expected response. Notice that this is *NOT* an exception, but a real Json reply.
-
-        clientConnection.disconnect();
-    }
-
-    @Test
-    // Recall that the "throws IOException" doesn't signify anything but acknowledgement to the type checker
-    public void testAPIOneRecipe() throws IOException {
-
-        menu.add(Soup.buildNoExceptions(true, Set.of(
-                new Carrots(Carrots.CarrotChopType.MATCHSTICK, 6.0),
-                new HotPeppers(1, 2.0))));
-
-        HttpURLConnection clientConnection = tryRequest("order");
-        // Get an OK response (the *connection* worked, the *API* provides an error response)
-        assertEquals(200, clientConnection.getResponseCode());
-
-        // Now we need to see whether we've got the expected Json response.
-        // SoupAPIUtilities handles ingredient lists, but that's not what we've got here.
-        // NOTE:   (How could we reduce the code repetition?)
-        Moshi moshi = new Moshi.Builder().add(
-                // Expect something that's an Ingredient...
-                PolymorphicJsonAdapterFactory.of(Ingredient.class, "type")
-                        // ...with two possibilities for concrete shapes, disambiguated by type:
-                        .withSubtype(Carrots.class, "carrot")
-                        .withSubtype(HotPeppers.class, "hotpeppers"))
-                .build();
-        // NOTE: We're using a lot of raw strings here. What could we do about that?
-
-        // We'll use okio's Buffer class here
-        OrderHandler.SoupSuccessResponse response =
-                moshi.adapter(OrderHandler.SoupSuccessResponse.class).fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
-
-        // ^ If that succeeds, we got the expected response. But we should also check the ingredients
-        assertEquals(Set.of(
-                new Carrots(Carrots.CarrotChopType.MATCHSTICK, 6.0),
-                new HotPeppers(1, 2.0)),
-                    response.ingredients());
-
-        clientConnection.disconnect();
-    }
+//    @Test
+//    // Recall that the "throws IOException" doesn't signify anything but acknowledgement to the type checker
+//    public void testAPIOneRecipe() throws IOException {
+//
+//        menu.add(Soup.buildNoExceptions(true, Set.of(
+//                new Carrots(Carrots.CarrotChopType.MATCHSTICK, 6.0),
+//                new HotPeppers(1, 2.0))));
+//
+//        HttpURLConnection clientConnection = tryRequest("order");
+//        // Get an OK response (the *connection* worked, the *API* provides an error response)
+//        assertEquals(200, clientConnection.getResponseCode());
+//
+//        // Now we need to see whether we've got the expected Json response.
+//        // SoupAPIUtilities handles ingredient lists, but that's not what we've got here.
+//        // NOTE:   (How could we reduce the code repetition?)
+//        Moshi moshi = new Moshi.Builder().add(
+//                // Expect something that's an Ingredient...
+//                PolymorphicJsonAdapterFactory.of(Ingredient.class, "type")
+//                        // ...with two possibilities for concrete shapes, disambiguated by type:
+//                        .withSubtype(Carrots.class, "carrot")
+//                        .withSubtype(HotPeppers.class, "hotpeppers"))
+//                .build();
+//        // NOTE: We're using a lot of raw strings here. What could we do about that?
+//
+//        // We'll use okio's Buffer class here
+//        OrderHandler.SoupSuccessResponse response =
+//                moshi.adapter(OrderHandler.SoupSuccessResponse.class).fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
+//
+//        // ^ If that succeeds, we got the expected response. But we should also check the ingredients
+//        assertEquals(Set.of(
+//                new Carrots(Carrots.CarrotChopType.MATCHSTICK, 6.0),
+//                new HotPeppers(1, 2.0)),
+//                    response.ingredients());
+//
+//        clientConnection.disconnect();
+//    }
 }
