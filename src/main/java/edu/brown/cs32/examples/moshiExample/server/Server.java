@@ -5,6 +5,7 @@ import static spark.Spark.after;
 import Handlers.LoadHandler;
 import Handlers.SearchHandler;
 import Handlers.ViewHandler;
+import Handlers.WeatherHandler;
 import spark.Spark;
 
 import java.io.BufferedReader;
@@ -63,6 +64,7 @@ public class Server {
         Spark.get("loadcsv", new LoadHandler(new LoadedFiles<List<List<String>>>()));
         Spark.get("viewcsv", new ViewHandler());
         Spark.get("searchcsv", new SearchHandler());
+        Spark.get("weather", new WeatherHandler());
         Spark.init();
         Spark.awaitInitialization();
         System.out.println("Server started.");

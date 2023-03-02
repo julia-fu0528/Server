@@ -33,11 +33,14 @@ public class SearchHandler implements Route {
         } catch (SearchFailureException e) {
             return new SearchFailureResponse(column, value).serialize();
         }
+        if (data.isEmpty()){
+            return new ValueNotFoundResponse(column, value).serialize();
+        }
         return new SearchSuccessResponse(data, column, value).serialize();
     }
-    public void setLoaded(LoadedFiles<List<List<String>>> csv){
-        this.loaded = csv;
-    }
+//    public void setLoaded(LoadedFiles<List<List<String>>> csv){
+//        this.loaded = csv;
+//    }
     public record MissingColumnResponse(String response_type, String message) {
         public MissingColumnResponse() {
             this("error_bad_request", "Missing column query");
@@ -81,6 +84,21 @@ public class SearchHandler implements Route {
                 // For debugging purposes, show in the console _why_ this fails
                 // Otherwise we'll just get an error 500 from the API in integration
                 // testing.
+                e.printStackTrace();
+                throw e;
+            }
+        }
+    }
+    public record ValueNotFoundResponse(String response_type, String column, String value, String message){
+        public ValueNotFoundResponse(String column, String value){
+            this("error.json", column, value,
+                    "The value ' " + value + "' can't be found at column " + column);
+        }
+        String serialize(){
+            try{
+                Moshi moshi = new Moshi.Builder().build();
+                return moshi.adapter(ValueNotFoundResponse.class).toJson(this);
+            }catch(Exception e){
                 e.printStackTrace();
                 throw e;
             }

@@ -32,6 +32,7 @@ public class ViewHandler implements Route{
     }
     public record ViewCSVSuccessResponse(String response_type, List<List<String>> data, String message){
         public ViewCSVSuccessResponse(List<List<String>> data){
+
             this("success", data, "File available for view.");
         }
         String serialize(){
