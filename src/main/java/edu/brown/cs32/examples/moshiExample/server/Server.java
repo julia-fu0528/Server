@@ -61,8 +61,8 @@ public class Server {
 
         // Setting up the handler for the GET /order endpoint
         Spark.get("loadcsv", new LoadHandler(new LoadedFiles<List<List<String>>>()));
-        // Spark.get("viewcsv", new ViewHandler(storage));
-        // Spark.get("searchcsv", new SearchHandler(storage));
+        Spark.get("viewcsv", new ViewHandler());
+        Spark.get("searchcsv", new SearchHandler());
         Spark.init();
         Spark.awaitInitialization();
         System.out.println("Server started.");

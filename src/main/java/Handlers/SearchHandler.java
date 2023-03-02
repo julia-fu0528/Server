@@ -14,7 +14,7 @@ public class SearchHandler implements Route {
     public LoadedFiles<List<List<String>>> loaded;
 
     public SearchHandler() {
-
+        this.loaded = LoadHandler.loaded;
     }
 
     public Object handle(Request request, Response response) throws Exception {

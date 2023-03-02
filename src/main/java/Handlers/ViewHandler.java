@@ -13,6 +13,7 @@ public class ViewHandler implements Route{
     public LoadedFiles<List<List<String>>> loaded;
 
     public ViewHandler(){
+        this.loaded = LoadHandler.loaded;
 
     }
     public Object handle(Request request, Response response) throws Exception{

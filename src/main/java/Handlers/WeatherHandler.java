@@ -13,20 +13,20 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 public class WeatherHandler implements Route {
-    public Object handle(Request request, Response response)throws Exception{
+    public Object handle(Request request, Response response) throws Exception {
         String latitude = request.queryParams("lat");
         String longitude = request.queryParams("lon");
-        if (latitude == null){
+        if (latitude == null) {
             return new MissingLatitudeResponse().serialize();
-        }else if(longitude == null){
+        } else if (longitude == null) {
             return new MissingLongitudeResponse().serialize();
         }
         float lat_float;
         float lon_float;
-        try{
-           lat_float = Float.parseFloat(latitude);
-           lon_float = Float.parseFloat(longitude);
-        }catch(NumberFormatException e){
+        try {
+            lat_float = Float.parseFloat(latitude);
+            lon_float = Float.parseFloat(longitude);
+        } catch (NumberFormatException e) {
             return new WrongCoorFormatResponse(latitude, longitude).serialize();
         }
         HttpResponse<String> coordinateResponse =
@@ -34,20 +34,24 @@ public class WeatherHandler implements Route {
 
         int status_code = coordinateResponse.statusCode();
 
-        if (status_code == 404){
+        if (status_code == 404) {
             return new NWSNoDataResponse(lat_float, lon_float).serialize();
-        }else if(status_code == 400){
+        } else if (status_code == 400) {
             return new InvalidLocationResponse(lat_float, lon_float).serialize();
-        }else if (status_code == 500){
+        } else if (status_code == 500) {
             return new InternalErrorResponse(lat_float, lon_float).serialize();
-        }else if(status_code == 200){
-            return new CoordinateSuccessResponse(coordinateResponse, lat_float, lon_float).serialize();
         }
+        // else if (status_code == 200) {
+        return new CoordinateSuccessResponse(coordinateResponse, lat_float, lon_float).serialize();
     }
     public static HttpResponse<String> get_apiResponse(String website) throws IOException, InterruptedException, URISyntaxException{
         HttpRequest request = HttpRequest.newBuilder().uri(new URI(website)).GET().build();
         return HttpClient.newBuilder().build().send(request, HttpResponse.BodyHandlers.ofString());
     }
+//    public static String get_locationResponse(HttpResponse<String> response, float lat_float, float lon_float) throws Exception{
+//        Moshi moshi = new Moshi.Builder().build();
+//        NWSPoints points = moshi.adapter(NWSPoints.class).fromJson(response.body());
+//    }
     public record MissingLatitudeResponse(String response_type, String message){
         public MissingLatitudeResponse(){
             this("error_datasource", "Missing latitude query");

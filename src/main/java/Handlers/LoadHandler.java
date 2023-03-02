@@ -28,7 +28,7 @@ import java.util.Set;
  *
  */
 public class LoadHandler implements Route {
-    public LoadedFiles<List<List<String>>> loaded;
+    public static LoadedFiles<List<List<String>>> loaded;
 
     /**
      * Constructor accepts some shared state

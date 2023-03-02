@@ -2,7 +2,6 @@ package edu.brown.cs32.examples.moshiExample;
 
 import edu.brown.cs32.examples.moshiExample.ingredients.Carrots;
 import edu.brown.cs32.examples.moshiExample.ingredients.HotPeppers;
-import edu.brown.cs32.examples.moshiExample.server.SoupAPIUtilities;
 import edu.brown.cs32.examples.moshiExample.soup.ActualFlavorException;
 import edu.brown.cs32.examples.moshiExample.soup.Soup;
 
