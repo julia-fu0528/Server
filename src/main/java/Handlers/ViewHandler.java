@@ -1,7 +1,9 @@
 package Handlers;
 
 import Exceptions.NoFileStoredException;
+import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
+import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory;
 import edu.brown.cs32.examples.moshiExample.server.LoadedFiles;
 import spark.Request;
 import spark.Response;
@@ -28,14 +30,24 @@ public class ViewHandler implements Route{
     public void setLoaded(LoadedFiles<List<List<String>>> csv){
         this.loaded = csv;
     }
-    public record ViewCSVSuccessResponse(String reponse_type, List<List<String>> parsed, String message){
-        public ViewCSVSuccessResponse(List<List<String>> parsed){
-            this("success", parsed, "File available for view.");
+    public record ViewCSVSuccessResponse(String response_type, List<List<String>> data, String message){
+        public ViewCSVSuccessResponse(List<List<String>> data){
+            this("success", data, "File available for view.");
         }
         String serialize(){
-            Moshi moshi = new Moshi.Builder().build();
-            return moshi.adapter(ViewCSVSuccessResponse.class).toJson(this);
+            try{
+                Moshi moshi = new Moshi.Builder().build();
+                return moshi.adapter(ViewCSVSuccessResponse.class).toJson(this);
+            }
+            catch(Exception e) {
+                // For debugging purposes, show in the console _why_ this fails
+                // Otherwise we'll just get an error 500 from the API in integration
+                // testing.
+                e.printStackTrace();
+                throw e;
+            }
         }
+
     }
     public record ViewCSVFailureResponse(String response_type, String message){
         public ViewCSVFailureResponse(){

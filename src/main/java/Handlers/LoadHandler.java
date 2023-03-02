@@ -56,7 +56,7 @@ public class LoadHandler implements Route {
         }
         //String filepath = qm.value("path");
         System.out.println(filepath);
-        FileReader toParse = null;
+        FileReader toParse;
         try{
             toParse = new FileReader(filepath);
         }catch(FileSystemNotFoundException e){
@@ -123,8 +123,16 @@ public class LoadHandler implements Route {
                     "Contents accessible in endpoint viewcsv");
         }
         String serialize(){
-            Moshi moshi = new Moshi.Builder().build();
-            return moshi.adapter(CSVParsingSuccessResponse.class).toJson(this);
+            try {
+                Moshi moshi = new Moshi.Builder().build();
+                return moshi.adapter(CSVParsingSuccessResponse.class).toJson(this);
+            } catch(Exception e) {
+            // For debugging purposes, show in the console _why_ this fails
+            // Otherwise we'll just get an error 500 from the API in integration
+            // testing.
+            e.printStackTrace();
+            throw e;
+            }
         }
     }
 }

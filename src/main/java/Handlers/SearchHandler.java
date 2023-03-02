@@ -3,6 +3,7 @@ package Handlers;
 import Algos.Search;
 import Exceptions.SearchFailureException;
 import com.squareup.moshi.Moshi;
+import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory;
 import edu.brown.cs32.examples.moshiExample.server.LoadedFiles;
 import spark.Request;
 import spark.Response;
@@ -20,7 +21,7 @@ public class SearchHandler implements Route {
     public Object handle(Request request, Response response) throws Exception {
         String column = request.queryParams("column");
         String value = request.queryParams("value");
-        List<List<String>> searched;
+        List<List<String>> data;
         if (column == null) {
             return new MissingColumnResponse().serialize();
         } else if (value == null) {
@@ -28,11 +29,11 @@ public class SearchHandler implements Route {
         }
         try {
             Search searcher = new Search(this.loaded.storage);
-            searched = searcher.searchTarget(column, value);
+            data = searcher.searchTarget(column, value);
         } catch (SearchFailureException e) {
             return new SearchFailureResponse(column, value).serialize();
         }
-        return new SearchSuccessResponse(searched).serialize();
+        return new SearchSuccessResponse(data, column, value).serialize();
     }
     public void setLoaded(LoadedFiles<List<List<String>>> csv){
         this.loaded = csv;
@@ -67,13 +68,22 @@ public class SearchHandler implements Route {
             return moshi.adapter(SearchFailureResponse.class).toJson(this);
         }
     }
-    public record SearchSuccessResponse(String response_type, List<List<String>> searched, String message){
-        public SearchSuccessResponse(List<List<String>> searched){
-            this("success", searched, "Value successfully searched");
+    public record SearchSuccessResponse(String response_type, List<List<String>> data, String column, String value, String message){
+        public SearchSuccessResponse(List<List<String>> data, String column, String value){
+            this("success", data, column, value, "Value successfully searched");
         }
         String serialize(){
-            Moshi moshi = new Moshi.Builder().build();
-            return moshi.adapter(SearchSuccessResponse.class).toJson(this);
+            try {
+                Moshi moshi = new Moshi.Builder().build();
+                return moshi.adapter(SearchSuccessResponse.class).toJson(this);
+            }
+            catch(Exception e) {
+                // For debugging purposes, show in the console _why_ this fails
+                // Otherwise we'll just get an error 500 from the API in integration
+                // testing.
+                e.printStackTrace();
+                throw e;
+            }
         }
     }
 }
