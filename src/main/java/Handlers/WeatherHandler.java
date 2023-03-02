@@ -23,7 +23,7 @@ public class WeatherHandler implements Route {
             return new WrongCoorFormatResponse(latitude, longitude).serialize();
         }
         HttpResponse<String> coordinateResponse =
-                getAPIResponse("https://api.weather.gov/points/" + latitude + "," + longitude);
+                get_apiResponse("https://api.weather.gov/points/" + latitude + "," + longitude);
     }
     public static HttpResponse<String> getAPI
     public record MissingLatitudeResponse(String response_type, String message){
