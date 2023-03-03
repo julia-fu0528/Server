@@ -3,7 +3,6 @@ package TestSuites;
 import Handlers.LoadHandler;
 import Handlers.SearchHandler;
 import Handlers.ViewHandler;
-import Handlers.WeatherHandler;
 import MockedData.MockedCSV;
 import com.squareup.moshi.Moshi;
 import Servers.LoadedFiles;

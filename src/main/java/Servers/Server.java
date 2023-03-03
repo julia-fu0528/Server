@@ -5,9 +5,6 @@ import static spark.Spark.after;
 import Handlers.LoadHandler;
 import Handlers.SearchHandler;
 import Handlers.ViewHandler;
-import Handlers.WeatherHandler;
-import Servers.LoadedFiles;
-import jdk.jshell.execution.LoaderDelegate;
 import spark.Spark;
 
 import java.io.BufferedReader;

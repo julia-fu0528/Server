@@ -1,12 +1,8 @@
 package TestSuites;
 
-import CSV.Algos.CSVParser;
-import CSV.RowCreators.RowCreator.ListCreator;
 import Handlers.LoadHandler;
 import Handlers.SearchHandler;
 import Handlers.ViewHandler;
-import Handlers.WeatherHandler;
-import MockedData.MockedCSV;
 import Servers.LoadedFiles;
 import com.squareup.moshi.Moshi;
 import okio.Buffer;
@@ -16,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import spark.Spark;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
