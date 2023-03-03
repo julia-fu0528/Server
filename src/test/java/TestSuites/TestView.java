@@ -4,6 +4,9 @@ import Handlers.LoadHandler;
 import Handlers.SearchHandler;
 import Handlers.ViewHandler;
 import Servers.LoadedFiles;
+import Weather.Requester.PlainRequester;
+import Weather.WeatherCachingProxy;
+import Weather.WeatherHandler;
 import com.squareup.moshi.Moshi;
 import okio.Buffer;
 import org.junit.jupiter.api.AfterEach;
@@ -86,7 +89,7 @@ public class TestView {
         Spark.get("/loadcsv", new LoadHandler(new LoadedFiles<List<List<String>>>()));
         Spark.get("viewcsv", new ViewHandler());
         Spark.get("/searchcsv", new SearchHandler());
-        Spark.get("/weather", new WeatherHandler());
+        Spark.get("/weather", new WeatherHandler(new WeatherCachingProxy(new PlainRequester())));
         Spark.init();
         Spark.awaitInitialization(); // don't continue until the server is listening
     }

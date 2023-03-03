@@ -17,6 +17,9 @@ public class MockedCSV {
     public static String stardata_query = "loadcsv?filepath=src/main/data/stars/stardata.csv";
     public static String stardata_path = "src/main/data/stars/stardata.csv";
 
+    public static String headers_empty_query = "loadcsv?filepath=src/main/data/made-example-files/empty-with-headers.csv";
+    public static String headers_empty_path = "src/main/data/made-example-files/empty-with-headers.csv";
+
 //    public static LoadedFiles empty_file;
 //
 //    static {
@@ -28,4 +31,34 @@ public class MockedCSV {
 //            throw new RuntimeException(e);
 //        }
 //    }
+    public static List<List<String>> empty_file;
+
+    static {
+        try {
+            empty_file = new CSVParser(new FileReader(emptycsv_path), new ListCreator()).parse();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public static List<List<String>> star_file;
+
+    static {
+        try {
+            star_file = new CSVParser(new FileReader(stardata_path), new ListCreator()).parse();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public static List<List<String>> headers_empty_file;
+
+    static {
+        try {
+            headers_empty_file = new CSVParser(new FileReader(headers_empty_path), new ListCreator()).parse();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public MockedCSV() throws FileNotFoundException {
+    }
 }
