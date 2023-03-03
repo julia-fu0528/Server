@@ -49,8 +49,11 @@
                 - *column*: the given query value at key "column"
                 - *value*: the given query value at key "value"
                 - *message*: "Value successfully searched"
+    - *Weather*
+        - *Requester*
+        - *Data*
+        - *WeatherCachingProxy*
         - *WeatherHandler*
-            - 
     - *Servers*
         - *LoadedFiles*
             - field: generic type storage
@@ -72,9 +75,10 @@
         - given example files: stardata and ten-star csv
 - **test Directory**
     - *TestSuites*
-        - TestLoad: tests "loadcsv"
-        - TestView: tests "viewcsv"
-        - TestSearch: tests "searchcsv"
+        - TestCSV: tests "loadcsv" + "viewcsv" + "searchcsv" success
+        - TestLoad: tests "loadcsv" edge cases : failure/exception response
+        - TestView: tests "viewcsv" edge cases : failure/exception response
+        - TestSearch: tests "searchcsv" edge cases : failure/exception response
         - TestWeather: tests "weather"
       
 ## Errors/Bugs
