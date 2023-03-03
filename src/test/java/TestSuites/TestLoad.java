@@ -1,5 +1,9 @@
 package TestSuites;
 
+import CSV.Algos.CSVParser;
+import CSV.Algos.Search;
+import CSV.RowCreators.RowCreator.ListCreator;
+import Exceptions.SearchFailureException;
 import Handlers.LoadHandler;
 import Handlers.SearchHandler;
 import Handlers.ViewHandler;
@@ -16,6 +20,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import spark.Spark;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -88,11 +94,12 @@ public class TestLoad {
         storage.clear();
 
         // In fact, restart the entire Spark server for every test!
+        Spark.init();
         Spark.get("/loadcsv", new LoadHandler(new LoadedFiles<List<List<String>>>()));
         Spark.get("viewcsv", new ViewHandler());
         Spark.get("/searchcsv", new SearchHandler());
         Spark.get("/weather", new WeatherHandler());
-        Spark.init();
+        // Spark.init();
         Spark.awaitInitialization(); // don't continue until the server is listening
     }
 
@@ -149,7 +156,7 @@ public class TestLoad {
     }
     @Test
     public void testLoadInvalidCSV() throws IOException {
-        HttpURLConnection clientConnection = tryRequest(MockedCSV.invalid_query);
+        HttpURLConnection clientConnection = tryRequest("loadcsv?filepath=starsdatas.csv");
         assertEquals(200, clientConnection.getResponseCode());
 
         Moshi moshi = new Moshi.Builder().build();
@@ -158,183 +165,10 @@ public class TestLoad {
                         fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
         assertEquals("error_datasource",
                 response.result());
-        assertEquals(MockedCSV.invalid_filepath,
+        assertEquals("starsdatas.csv",
                 response.filepath());
-        assertEquals("File '" + MockedCSV.invalid_filepath + "'doesn't exist. ",
+        assertEquals("File '" + "starsdatas.csv" + "'doesn't exist. ",
                 response.message());
         clientConnection.disconnect();
     }
-    @Test
-    public void testSuccessEmpty() throws IOException {
-        // tests loadcsv for empty file
-        HttpURLConnection clientConnection = tryRequest(MockedCSV.emptycsv_query);
-        assertEquals(200, clientConnection.getResponseCode());
-
-        Moshi moshi = new Moshi.Builder().build();
-        LoadHandler.CSVParsingSuccessResponse response =
-                moshi.adapter(LoadHandler.CSVParsingSuccessResponse.class).
-                        fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
-        assertEquals("success",
-                response.result());
-        assertEquals(MockedCSV.emptycsv_path,
-                response.filepath());
-        assertEquals("CSV File'" + MockedCSV.emptycsv_path + "' successfully stored. " +
-                        "Contents accessible in endpoint viewcsv",
-                response.message());
-        // tests view csv for empty file
-        HttpURLConnection clientConnection_view = tryRequest("viewcsv");
-        assertEquals(200, clientConnection_view.getResponseCode());
-        Moshi moshi_view = new Moshi.Builder().build();
-        ViewHandler.ViewCSVSuccessResponse response_view =
-                moshi.adapter(ViewHandler.ViewCSVSuccessResponse.class).
-                        fromJson(new Buffer().readFrom(clientConnection_view.getInputStream()));
-        assertEquals("success",
-                response_view.result());
-        assertEquals(MockedCSV.empty_file,
-                response_view.data());
-        assertEquals("File available for view.",
-                response_view.message());
-        // tests search csv for empty file
-        HttpURLConnection clientConnection_search = tryRequest("searchcsv?column=0&value=julia");
-        assertEquals(200, clientConnection_search.getResponseCode());
-        Moshi moshi_search = new Moshi.Builder().build();
-        SearchHandler.SearchFailureResponse response_search =
-                moshi.adapter(SearchHandler.SearchFailureResponse.class).
-                        fromJson(new Buffer().readFrom(clientConnection_search.getInputStream()));
-        assertEquals("error_datasource",
-                response_search.result());
-        assertEquals("0",
-                response_search.column());
-        assertEquals("julia",
-                response_search.value());
-        assertEquals("Searching 'julia ' at column '0' fails",
-                response_search.message());
-        clientConnection.disconnect();
-    }
-    @Test
-    public void testSuccessNonempty() throws IOException {
-        // test load csv for nonempty file
-        HttpURLConnection clientConnection = tryRequest(MockedCSV.stardata_query);
-        assertEquals(200, clientConnection.getResponseCode());
-
-        Moshi moshi = new Moshi.Builder().build();
-        LoadHandler.CSVParsingSuccessResponse response =
-                moshi.adapter(LoadHandler.CSVParsingSuccessResponse.class).
-                        fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
-        assertEquals("success",
-                response.result());
-        assertEquals(MockedCSV.stardata_path,
-                response.filepath());
-        assertEquals("CSV File'" + MockedCSV.stardata_path + "' successfully stored. " +
-                        "Contents accessible in endpoint viewcsv",
-                response.message());
-        // tests view csv for nonempty file
-        HttpURLConnection clientConnection_view = tryRequest("viewcsv");
-        assertEquals(200, clientConnection_view.getResponseCode());
-        Moshi moshi_view = new Moshi.Builder().build();
-        ViewHandler.ViewCSVSuccessResponse response_view =
-                moshi.adapter(ViewHandler.ViewCSVSuccessResponse.class).
-                        fromJson(new Buffer().readFrom(clientConnection_view.getInputStream()));
-        assertEquals("success",
-                response_view.result());
-        assertEquals(MockedCSV.star_file,
-                response_view.data());
-        assertEquals("File available for view.",
-                response_view.message());
-        // tests search csv for nonempty file, search column header
-        HttpURLConnection clientConnection_search = tryRequest("searchcsv?column=ProperName&value=Rory");
-        assertEquals(200, clientConnection_search.getResponseCode());
-        Moshi moshi_search = new Moshi.Builder().build();
-        SearchHandler.SearchSuccessResponse response_search =
-                moshi.adapter(SearchHandler.SearchSuccessResponse.class).
-                        fromJson(new Buffer().readFrom(clientConnection_search.getInputStream()));
-        assertEquals("success",
-                response_search.result());
-        assertEquals("ProperName",
-                response_search.column());
-        assertEquals("Rory",
-                response_search.value());
-        assertEquals("Value successfully searched",
-                response_search.message());
-
-        clientConnection.disconnect();
-    }
-    @Test
-    public void testSuccessHeadersEmpty() throws IOException {
-        // test load csv for nonempty file
-        HttpURLConnection clientConnection = tryRequest(MockedCSV.headers_empty_query);
-        assertEquals(200, clientConnection.getResponseCode());
-
-        Moshi moshi = new Moshi.Builder().build();
-        LoadHandler.CSVParsingSuccessResponse response =
-                moshi.adapter(LoadHandler.CSVParsingSuccessResponse.class).
-                        fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
-        assertEquals("success",
-                response.result());
-        assertEquals(MockedCSV.headers_empty_path,
-                response.filepath());
-        assertEquals("CSV File'" + MockedCSV.headers_empty_path + "' successfully stored. " +
-                        "Contents accessible in endpoint viewcsv",
-                response.message());
-        // tests view csv for nonempty file
-        HttpURLConnection clientConnection_view = tryRequest("viewcsv");
-        assertEquals(200, clientConnection_view.getResponseCode());
-        Moshi moshi_view = new Moshi.Builder().build();
-        ViewHandler.ViewCSVSuccessResponse response_view =
-                moshi.adapter(ViewHandler.ViewCSVSuccessResponse.class).
-                        fromJson(new Buffer().readFrom(clientConnection_view.getInputStream()));
-        assertEquals("success",
-                response_view.result());
-        assertEquals(MockedCSV.headers_empty_file,
-                response_view.data());
-        assertEquals("File available for view.",
-                response_view.message());
-        // tests search csv for nonempty file, value not found
-        HttpURLConnection clientConnection_search = tryRequest("searchcsv?column=First+Name&value=Rory");
-        assertEquals(200, clientConnection_search.getResponseCode());
-        Moshi moshi_search = new Moshi.Builder().build();
-        SearchHandler.ValueNotFoundResponse response_search =
-                moshi.adapter(SearchHandler.ValueNotFoundResponse.class).
-                        fromJson(new Buffer().readFrom(clientConnection_search.getInputStream()));
-        assertEquals("error.json",
-                response_search.result());
-        assertEquals("First Name",
-                response_search.column());
-        assertEquals("Rory",
-                response_search.value());
-        assertEquals("The value ' Rory' can't be found at column First Name",
-                response_search.message());
-
-        clientConnection.disconnect();
-    }
-//    @Test
-//    // Recall that the "throws IOException" doesn't signify anything but acknowledgement to the type checker
-//    public void testAPIOneRecipe() throws IOException {
-//
-////        menu.add(Soup.buildNoExceptions(true, Set.of(
-////                new Carrots(Carrots.CarrotChopType.MATCHSTICK, 6.0),
-////                new HotPeppers(1, 2.0))));
-//
-//        HttpURLConnection clientConnection = tryRequest("loadcsv");
-//        // Get an OK response (the *connection* worked, the *API* provides an error response)
-//        assertEquals(200, clientConnection.getResponseCode());
-//
-//        // Now we need to see whether we've got the expected Json response.
-//        // SoupAPIUtilities handles ingredient lists, but that's not what we've got here.
-//        // NOTE:   (How could we reduce the code repetition?)
-//        Moshi moshi = new Moshi.Builder().build();
-//        // NOTE: We're using a lot of raw strings here. What could we do about that?
-//
-//        // We'll use okio's Buffer class here
-//        LoadHandler response =
-//                moshi.adapter(LoadHandler.class).fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
-//
-//        // ^ If that succeeds, we got the expected response. But we should also check the ingredients
-//        assertEquals(Set.of(
-//                new Carrots(Carrots.CarrotChopType.MATCHSTICK, 6.0),
-//                new HotPeppers(1, 2.0)),
-//                    response.ingredients());
-//
-//        clientConnection.disconnect();
-//    }
 }

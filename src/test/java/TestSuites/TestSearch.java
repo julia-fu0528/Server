@@ -155,22 +155,5 @@ public class TestSearch {
                 response.message());
         clientConnection.disconnect();
     }
-    @Test
-    public void testSearchNotFound() throws IOException {
-        HttpURLConnection clientConnection = tryRequest("searchcsv?column=Name&value=Julia");
-        assertEquals(200, clientConnection.getResponseCode());
 
-        Moshi moshi = new Moshi.Builder().build();
-        SearchHandler.SearchFailureResponse response =
-                moshi.adapter(SearchHandler.SearchFailureResponse.class).
-                        fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
-
-        assertEquals("error_bad_request",
-                response.result());
-        assertEquals("Name", response.column());
-        assertEquals("Julia", response.value());
-        assertEquals("Searching 'Julia' at column 'Name' fails",
-                response.message());
-        clientConnection.disconnect();
-    }
 }

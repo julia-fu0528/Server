@@ -1,7 +1,9 @@
 package MockedData;
 
 import CSV.Algos.CSVParser;
+import CSV.Algos.Search;
 import CSV.RowCreators.RowCreator.ListCreator;
+import Exceptions.SearchFailureException;
 import Servers.LoadedFiles;
 
 import java.io.FileNotFoundException;
@@ -19,6 +21,8 @@ public class MockedCSV {
 
     public static String headers_empty_query = "loadcsv?filepath=src/main/data/made-example-files/empty-with-headers.csv";
     public static String headers_empty_path = "src/main/data/made-example-files/empty-with-headers.csv";
+    public static String noheaders_people_query = "loadcsv?filepath=src/main/data/made-example-files/people-no-headers.csv";
+    public static String noheaders_people_path = "src/main/data/made-example-files/people-no-headers.csv";
 
 //    public static LoadedFiles empty_file;
 //
@@ -49,12 +53,40 @@ public class MockedCSV {
             throw new RuntimeException(e);
         }
     }
+    public static List<List<String>> star_searched;
+
+    static {
+        try {
+            star_searched = new Search(star_file).searchTarget("ProperName", "Rory");
+        } catch (SearchFailureException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static List<List<String>> headers_empty_file;
 
     static {
         try {
             headers_empty_file = new CSVParser(new FileReader(headers_empty_path), new ListCreator()).parse();
         } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public static List<List<String>> noheaders_people_file;
+
+    static {
+        try {
+            noheaders_people_file = new CSVParser(new FileReader(noheaders_people_path), new ListCreator()).parse();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public static List<List<String>> people_searched;
+
+    static {
+        try {
+            people_searched = new Search(noheaders_people_file).searchTarget("3", "student");
+        } catch (SearchFailureException e) {
             throw new RuntimeException(e);
         }
     }
