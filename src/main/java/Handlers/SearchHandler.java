@@ -9,20 +9,34 @@ import spark.Response;
 import spark.Route;
 
 import java.util.List;
-
+/**
+ * Handler class for the searchcsv API endpoint.
+ *
+ */
 public class SearchHandler implements Route {
     public LoadedFiles<List<List<String>>> loaded;
-
+    /**
+     * Constructor accepts some shared state
+     */
     public SearchHandler() {
         this.loaded = LoadHandler.loaded;
     }
-
+    /**
+     * handles the csv file to view
+     * @param request the request to handle
+     * @param response use to modify properties of the response
+     * @return response content
+     * @throws Exception This is part of the interface; we don't have to throw anything.
+     */
     public Object handle(Request request, Response response) throws Exception {
+        // retrieves queries entered by the user
         String column = request.queryParams("column");
         String value = request.queryParams("value");
         List<List<String>> data;
+        // if no column query is provided by the user
         if (column == null) {
             return new MissingColumnResponse().serialize();
+            // if no value query is not provided by the user
         } else if (value == null) {
             return new MissingValueResponse().serialize();
         }
@@ -30,16 +44,19 @@ public class SearchHandler implements Route {
             Search searcher = new Search(this.loaded.storage);
             data = searcher.searchTarget(column, value);
         } catch (SearchFailureException e) {
+            // if searching fails
             return new SearchFailureResponse(column, value).serialize();
         }
         if (data.isEmpty()){
+            // if value provided by the user is not found in the given column
             return new ValueNotFoundResponse(column, value).serialize();
         }
+        // search success
         return new SearchSuccessResponse(data, column, value).serialize();
     }
-//    public void setLoaded(LoadedFiles<List<List<String>>> csv){
-//        this.loaded = csv;
-//    }
+    /**
+     * Response object to send if the column query is not given by the user
+     */
     public record MissingColumnResponse(String result, String message) {
         public MissingColumnResponse() {
             this("error_bad_request", "Missing column query");
@@ -50,6 +67,9 @@ public class SearchHandler implements Route {
             return moshi.adapter(MissingColumnResponse.class).toJson(this);
         }
     }
+    /**
+     * Response object to send if the value query is not given by the user
+     */
     public record MissingValueResponse(String result, String message){
         public MissingValueResponse(){
            this("error_bad_request", "Missing value query");
@@ -59,6 +79,9 @@ public class SearchHandler implements Route {
             return moshi.adapter(MissingValueResponse.class).toJson(this);
         }
     }
+    /**
+     * Response object to send if search fails
+     */
     public record SearchFailureResponse(String result, String column, String value, String message) {
         public SearchFailureResponse(String column, String value) {
             this("error_datasource", column, value,
@@ -70,6 +93,9 @@ public class SearchHandler implements Route {
             return moshi.adapter(SearchFailureResponse.class).toJson(this);
         }
     }
+    /**
+     * Response object to send if search succeeds
+     */
     public record SearchSuccessResponse(String result, List<List<String>> data, String column, String value, String message){
         public SearchSuccessResponse(List<List<String>> data, String column, String value){
             this("success", data, column, value, "Value successfully searched");
@@ -80,14 +106,15 @@ public class SearchHandler implements Route {
                 return moshi.adapter(SearchSuccessResponse.class).toJson(this);
             }
             catch(Exception e) {
-                // For debugging purposes, show in the console _why_ this fails
-                // Otherwise we'll just get an error 500 from the API in integration
-                // testing.
+                // other errors
                 e.printStackTrace();
                 throw e;
             }
         }
     }
+    /**
+     * Response object to send if the value to be searched is not found
+     */
     public record ValueNotFoundResponse(String result, String column, String value, String message){
         public ValueNotFoundResponse(String column, String value){
             this("error.json", column, value,

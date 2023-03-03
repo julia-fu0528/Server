@@ -189,7 +189,7 @@
             - a WeatherResponse is created by deserializing the Json forecast
     - *Cache-eviction*
         - cache eviction is achieved by the method getForecast in the class WeatherCachingProxy from directory Weather
-        - cache eviction can be controlled by controling or changing the following: 
+        - cache eviction can be controlled by controlling or changing the following: 
         - the distance between the location representing by the given latitude and longitude and each of the cached locations are calculated
         - if the distance is small enough(criteria can be controlled by developer), then cached information is evicted
         - if the distance is not small enough, then information is retrieved from NWS and then a newly matched map is cached

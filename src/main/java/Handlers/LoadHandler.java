@@ -13,10 +13,7 @@ import java.nio.file.FileSystemNotFoundException;
 import java.util.List;
 
 /**
- * Handler class for the soup ordering API endpoint.
- *
- * This endpoint is similar to the endpoint(s) you'll need to create for Sprint 2. It takes a basic GET request with
- * no Json body, and returns a Json object in reply. The responses are more complex, but this should serve as a reference.
+ * Handler class for the loadcsv API endpoint.
  *
  */
 public class LoadHandler implements Route {
@@ -30,8 +27,7 @@ public class LoadHandler implements Route {
     }
 
     /**
-     * Pick a convenient soup and make it. the most "convenient" soup is the first recipe we find in the unordered
-     * set of recipe cards.
+     * handles the csv file to load
      * @param request the request to handle
      * @param response use to modify properties of the response
      * @return response content
@@ -39,46 +35,42 @@ public class LoadHandler implements Route {
      */
     @Override
     public Object handle(Request request, Response response) throws Exception {
-        // Request: when the client asks for something from the webpage (what your user sends)
-        // Response: when the webpage gives sth. back (what you're constructing to return
-        // QueryParamsMap qm = request.queryMap();
+        // gets the value under the query key "filepath"
         String filepath = request.queryParams("filepath");
         if (filepath == null){
+            // no filepath query
             return new MissingFilePathResponse().serialize();
         }
-        //String filepath = qm.value("path");
         System.out.println(filepath);
         FileReader toParse;
         try{
             toParse = new FileReader(filepath);
         }catch(Exception e){
+            // parse failure
             return new InaccessibleCSVResponse(filepath).serialize();
         }
 
-        //BufferedReader fr = new BufferedReader(new FileReader(filepath));
         CSVParser parser = new CSVParser(toParse, new ListCreator());
         List<List<String>> csv_json;
         try {
             csv_json = parser.parse();
         } catch (Exception e) {
+            // parse failure
             return new CSVParsingFailureResponse(filepath).serialize();
         }
         this.loaded.storeFile(csv_json);
+        // parse success
         return new CSVParsingSuccessResponse(filepath).serialize();
-        //return new SoupSuccessResponse(soup.ingredients()).serialize();
-        //return new SoupNoRecipesFailureResponse().serialize();
-        // NOTE: beware this "return Object" and "throws Exception" idiom. We need to follow it because
-        //   the library uses it, but in general this is lowers the protection of the type system.
     }
     /**
-     * Response object to send, containing a soup with certain ingredients in it
+     * Set the instance variable loaded with a LoadedFile
      */
     public void setLoaded(LoadedFiles<List<List<String>>> csv){
         this.loaded = csv;
     }
 
     /**
-     * Response object to send if someone requested soup before any recipes were loaded
+     * Response object to send if the filepath is invalid
      */
     public record InaccessibleCSVResponse(String result, String filepath, String message){
         public InaccessibleCSVResponse(String filepath){
@@ -89,6 +81,12 @@ public class LoadHandler implements Route {
             return moshi.adapter(InaccessibleCSVResponse.class).toJson(this);
         }
     }
+
+    /**
+     * Response object to send if no filepath query is entered
+     * @param result String signalling error
+     * @param message String specifying error
+     */
     public record MissingFilePathResponse(String result, String message) {
         public MissingFilePathResponse() {
             this("error_bad_request", "Missing filepath query.");
@@ -103,6 +101,12 @@ public class LoadHandler implements Route {
         }
     }
 
+    /**
+     * Response object to send if the csv file parsing fails
+     * @param result String signalling error
+     * @param filepath query value entered by the user
+     * @param message String specifying error
+     */
     public record CSVParsingFailureResponse(String result, String filepath, String message){
         public CSVParsingFailureResponse(String filepath){
             this("error_datasource", filepath, "Error parsing" + filepath);
@@ -112,6 +116,13 @@ public class LoadHandler implements Route {
             return moshi.adapter(CSVParsingFailureResponse.class).toJson(this);
         }
     }
+
+    /**
+     * Response object to send if the csv file is successfully parsed and laoded
+     * @param result String signalling success
+     * @param filepath query value entered by the user
+     * @param message String reporting success
+     */
     public record CSVParsingSuccessResponse(String result, String filepath, String message){
         public CSVParsingSuccessResponse(String filepath){
             this("success", filepath, "CSV File'" + filepath + "' successfully stored. " +
@@ -122,9 +133,7 @@ public class LoadHandler implements Route {
                 Moshi moshi = new Moshi.Builder().build();
                 return moshi.adapter(CSVParsingSuccessResponse.class).toJson(this);
             } catch(Exception e) {
-            // For debugging purposes, show in the console _why_ this fails
-            // Otherwise we'll just get an error 500 from the API in integration
-            // testing.
+                // internal error
             e.printStackTrace();
             throw e;
             }

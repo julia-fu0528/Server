@@ -8,10 +8,15 @@ import spark.Response;
 import spark.Route;
 
 import java.util.List;
-
+/**
+ * Handler class for the viewcsv API endpoint.
+ *
+ */
 public class ViewHandler implements Route{
     public LoadedFiles<List<List<String>>> loaded;
-
+    /**
+     * Constructor accepts some shared state
+     */
     public ViewHandler(){
         this.loaded = LoadHandler.loaded;
 
@@ -19,15 +24,27 @@ public class ViewHandler implements Route{
     public ViewHandler(LoadedFiles<List<List<String>>> loaded){
         this.loaded = loaded;
     }
+    /**
+     * handles the csv file to view
+     * @param request the request to handle
+     * @param response use to modify properties of the response
+     * @return response content
+     * @throws Exception This is part of the interface; we don't have to throw anything.
+     */
     public Object handle(Request request, Response response) throws Exception{
+        // retrieves the csv file
         List<List<String>> csv_json;
         try{
             csv_json = this.loaded.getFile();
             return new ViewCSVSuccessResponse(csv_json).serialize();
         }catch(NoFileStoredException e){
+            // if no csv has been loaded
             return new ViewCSVFailureResponse().serialize();
         }
     }
+    /**
+     * Response object to send if viewing csv succees
+     */
     public record ViewCSVSuccessResponse(String result, List<List<String>> data, String message){
         public ViewCSVSuccessResponse(List<List<String>> data){
 
@@ -39,15 +56,16 @@ public class ViewHandler implements Route{
                 return moshi.adapter(ViewCSVSuccessResponse.class).toJson(this);
             }
             catch(Exception e) {
-                // For debugging purposes, show in the console _why_ this fails
-                // Otherwise we'll just get an error 500 from the API in integration
-                // testing.
+                // error
                 e.printStackTrace();
                 throw e;
             }
         }
 
     }
+    /**
+     * Response object to send if no csv file has been stored yet.
+     */
     public record ViewCSVFailureResponse(String result, String message){
         public ViewCSVFailureResponse(){
             this("error_datasource", "No CSV file stored yet.");
