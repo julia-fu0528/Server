@@ -1,10 +1,9 @@
 package Handlers;
 
-import Algos.Search;
+import CSV.Algos.Search;
 import Exceptions.SearchFailureException;
 import com.squareup.moshi.Moshi;
-import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory;
-import edu.brown.cs32.examples.moshiExample.server.LoadedFiles;
+import Servers.LoadedFiles;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -41,7 +40,7 @@ public class SearchHandler implements Route {
 //    public void setLoaded(LoadedFiles<List<List<String>>> csv){
 //        this.loaded = csv;
 //    }
-    public record MissingColumnResponse(String response_type, String message) {
+    public record MissingColumnResponse(String result, String message) {
         public MissingColumnResponse() {
             this("error_bad_request", "Missing column query");
         }
@@ -51,7 +50,7 @@ public class SearchHandler implements Route {
             return moshi.adapter(MissingColumnResponse.class).toJson(this);
         }
     }
-    public record MissingValueResponse(String response_type, String message){
+    public record MissingValueResponse(String result, String message){
         public MissingValueResponse(){
            this("error_bad_request", "Missing value query");
         }
@@ -60,10 +59,10 @@ public class SearchHandler implements Route {
             return moshi.adapter(MissingValueResponse.class).toJson(this);
         }
     }
-    public record SearchFailureResponse(String response_type, String column, String value, String message) {
+    public record SearchFailureResponse(String result, String column, String value, String message) {
         public SearchFailureResponse(String column, String value) {
             this("error_datasource", column, value,
-                    "the value'" + value + "can't be found at column'" + column);
+                    "Searching '" + value + " ' at column '" + column + "' fails");
         }
 
         String serialize() {
@@ -71,7 +70,7 @@ public class SearchHandler implements Route {
             return moshi.adapter(SearchFailureResponse.class).toJson(this);
         }
     }
-    public record SearchSuccessResponse(String response_type, List<List<String>> data, String column, String value, String message){
+    public record SearchSuccessResponse(String result, List<List<String>> data, String column, String value, String message){
         public SearchSuccessResponse(List<List<String>> data, String column, String value){
             this("success", data, column, value, "Value successfully searched");
         }
@@ -89,7 +88,7 @@ public class SearchHandler implements Route {
             }
         }
     }
-    public record ValueNotFoundResponse(String response_type, String column, String value, String message){
+    public record ValueNotFoundResponse(String result, String column, String value, String message){
         public ValueNotFoundResponse(String column, String value){
             this("error.json", column, value,
                     "The value ' " + value + "' can't be found at column " + column);

@@ -1,24 +1,16 @@
 package Handlers;
 
-import Algos.CSVParser;
-import Exceptions.FileNotFoundException;
-import RowCreator.ListCreator;
-import com.squareup.moshi.JsonAdapter;
+import CSV.Algos.CSVParser;
+import CSV.RowCreators.RowCreator.ListCreator;
 import com.squareup.moshi.Moshi;
-import com.squareup.moshi.Types;
-import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory;
-import edu.brown.cs32.examples.moshiExample.server.LoadedFiles;
-import spark.QueryParamsMap;
+import Servers.LoadedFiles;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 
-import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.IOException;
 import java.nio.file.FileSystemNotFoundException;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Handler class for the soup ordering API endpoint.
@@ -59,9 +51,10 @@ public class LoadHandler implements Route {
         FileReader toParse;
         try{
             toParse = new FileReader(filepath);
-        }catch(FileSystemNotFoundException e){
+        }catch(Exception e){
             return new InaccessibleCSVResponse(filepath).serialize();
         }
+
         //BufferedReader fr = new BufferedReader(new FileReader(filepath));
         CSVParser parser = new CSVParser(toParse, new ListCreator());
         List<List<String>> csv_json;
@@ -80,12 +73,14 @@ public class LoadHandler implements Route {
     /**
      * Response object to send, containing a soup with certain ingredients in it
      */
-
+    public void setLoaded(LoadedFiles<List<List<String>>> csv){
+        this.loaded = csv;
+    }
 
     /**
      * Response object to send if someone requested soup before any recipes were loaded
      */
-    public record InaccessibleCSVResponse(String response_type, String filepath, String message){
+    public record InaccessibleCSVResponse(String result, String filepath, String message){
         public InaccessibleCSVResponse(String filepath){
             this("error_datasource", filepath, "File '" + filepath + "'doesn't exist. ");
         }
@@ -94,7 +89,7 @@ public class LoadHandler implements Route {
             return moshi.adapter(InaccessibleCSVResponse.class).toJson(this);
         }
     }
-    public record MissingFilePathResponse(String response_type, String message) {
+    public record MissingFilePathResponse(String result, String message) {
         public MissingFilePathResponse() {
             this("error_bad_request", "Missing filepath query.");
         }
@@ -108,7 +103,7 @@ public class LoadHandler implements Route {
         }
     }
 
-    public record CSVParsingFailureResponse(String response_type, String filepath, String message){
+    public record CSVParsingFailureResponse(String result, String filepath, String message){
         public CSVParsingFailureResponse(String filepath){
             this("error_datasource", filepath, "Error parsing" + filepath);
         }
@@ -117,7 +112,7 @@ public class LoadHandler implements Route {
             return moshi.adapter(CSVParsingFailureResponse.class).toJson(this);
         }
     }
-    public record CSVParsingSuccessResponse(String response_type, String filepath, String message){
+    public record CSVParsingSuccessResponse(String result, String filepath, String message){
         public CSVParsingSuccessResponse(String filepath){
             this("success", filepath, "CSV File'" + filepath + "' successfully stored. " +
                     "Contents accessible in endpoint viewcsv");

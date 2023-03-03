@@ -1,10 +1,8 @@
 package Handlers;
 
 import Exceptions.NoFileStoredException;
-import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
-import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory;
-import edu.brown.cs32.examples.moshiExample.server.LoadedFiles;
+import Servers.LoadedFiles;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -18,6 +16,9 @@ public class ViewHandler implements Route{
         this.loaded = LoadHandler.loaded;
 
     }
+    public ViewHandler(LoadedFiles<List<List<String>>> loaded){
+        this.loaded = loaded;
+    }
     public Object handle(Request request, Response response) throws Exception{
         List<List<String>> csv_json;
         try{
@@ -27,10 +28,7 @@ public class ViewHandler implements Route{
             return new ViewCSVFailureResponse().serialize();
         }
     }
-    public void setLoaded(LoadedFiles<List<List<String>>> csv){
-        this.loaded = csv;
-    }
-    public record ViewCSVSuccessResponse(String response_type, List<List<String>> data, String message){
+    public record ViewCSVSuccessResponse(String result, List<List<String>> data, String message){
         public ViewCSVSuccessResponse(List<List<String>> data){
 
             this("success", data, "File available for view.");
@@ -50,7 +48,7 @@ public class ViewHandler implements Route{
         }
 
     }
-    public record ViewCSVFailureResponse(String response_type, String message){
+    public record ViewCSVFailureResponse(String result, String message){
         public ViewCSVFailureResponse(){
             this("error_datasource", "No CSV file stored yet.");
         }
