@@ -89,7 +89,7 @@ public class TestView {
         Spark.get("/loadcsv", new LoadHandler(new LoadedFiles<List<List<String>>>()));
         Spark.get("viewcsv", new ViewHandler());
         Spark.get("/searchcsv", new SearchHandler());
-        Spark.get("/weather", new WeatherHandler(new WeatherCachingProxy(new PlainRequester())));
+        Spark.get("/weather", new WeatherHandler());
         Spark.init();
         Spark.awaitInitialization(); // don't continue until the server is listening
     }

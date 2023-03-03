@@ -39,7 +39,7 @@ public class Server {
 //        menu.add(mushroomSoup);
 //        menu.add(carrotSoup);
         Set<BufferedReader> storage = new HashSet<>();
-        Spark.port(3232);
+        Spark.port(3235);
         /*
             Setting CORS headers to allow cross-origin requests from the client; this is necessary for the client to
             be able to make requests to the server.
@@ -66,7 +66,7 @@ public class Server {
         Spark.get("loadcsv", new LoadHandler(new LoadedFiles<List<List<String>>>()));
         Spark.get("viewcsv", new ViewHandler());
         Spark.get("searchcsv", new SearchHandler());
-        Spark.get("weather", new WeatherHandler(new WeatherCachingProxy(new PlainRequester())));
+        Spark.get("weather", new WeatherHandler());
         Spark.init();
         Spark.awaitInitialization();
         System.out.println("Server started.");

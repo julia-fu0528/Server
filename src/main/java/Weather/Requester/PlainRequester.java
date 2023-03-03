@@ -27,7 +27,7 @@ import java.net.URL;
  * The clientConnection.disconnect() method is called to close the connection to the remote server.
  * Finally, the response object is returned from the method.
  */
-public class PlainRequester implements Requestor {
+public class PlainRequester implements Requester {
 
     public <T> T requestToInstantiate(String url, Class<T> goalClass) throws IOException {
         URL urlRequest = new URL(url);
