@@ -5,15 +5,15 @@
 - **Team members and contributions**:
     - *wfu16*:
         - User Story 1
-        - MockedData
-        - less CSV
+        - CSV
         - less User Story 2
-        - tests
+        - testing
         - documentation
     - *dsaunde2*:
-        - most CSV
+        - CSV
         - most User Story 2
         - User Story 3
+        - testing
 - **Total estimated time**:
     - 20 hours
 - A link to [our repo](https://github.com/julia-fu0528/Server)
@@ -51,9 +51,59 @@
                 - *message*: "Value successfully searched"
     - *Weather*
         - *Requester*
+            - interface 
+            - contains generic method requestToInstantiate with inputs as follows:
+                - String url: the website to access
+                - generic class goalClass: the class to deserialize Json into
+        - *PlainRequester*
+            - implements the interface Requester
+            - installs generic method requestToInstantiate:
+                - if the api is in correct state 200, then deserialize the information on the webpage of the url
         - *Data*
+            - records of Json data retrieved from web api
+            - *Forecast*: double "temperature" + String "temperatureUnit"
+            - *ForecastProperties*: periods of the forecast, in the type of a list of Forecast
+            - *WeatherResponse*: properties of weather, in the type of ForecastProperties
+            - *GridResponse*: 
+               - properties of response, in the type of GridProperties
+               - title of the gridresponse, as a String
+            - *GridProperties*: String endpoint
         - *WeatherCachingProxy*
+            - instance variables:
+                - cache: of type LoadingCache of a list of doubles and WeatherResponse
+                - distance: double representing the distance between two locations
+                - weatherResponse: WeatherResponse representing the properties of weather
+                - Requester: able to deserialize Json string from browser url webpage
+            - caching:
+                - maxSize: the maximum size of our cache is 100
+                - expirationTime: the maximum amount that a cached element can remain is 10 minutes
+                - requester: mocked requester that works with weather API requester
+            - WeatherCachingProxy:
+                - creates a caching proxy that wraps around the requester instance variable
+                - when the requestToInstantiate() method is called with a new URL, it first checks if the requested URL is present in the cache 
+                   - If it is, it returns the cached value immediately without making a new request
+                   - If it not, the requestToInstantiate() method is called on the requester instance variable to make a new request and get the response. 
+                - The response is then added to the cache so that subsequent requests for the same URL can be returned from the cache without making new requests.
+            - getForecast:
+                - inputs two doubles representing the latitude and longitude of the location
+                - returns weather forecast as a record Forecast
+                - throws ExecutionException
+                - If the location is close enough to the already cached locations, the the cached weather forecast of that close enough location is returned
+                - If not, a new weather response of this new location is added into the caching, and this information is returned
+            - getWeatherResponse:
+                - returns weather response as a record WeatherResponse
+            - getCurrentTime:
+                - returns the time when the weather information is retrieved
+                - returned as a String containing Year, month, day, hours, minutes, and seconds
+            - getCacheState:
+                - returns cached information as the ConcurrentMap of a list of doubles with WeatherResponse
         - *WeatherHandler*
+            - private instance variable cache: of class WeatherCachingProxy
+            - if no "lat" or "lon" queries are entered, then respond with "error_bad_request"
+            - the weather information of that location represented by lat and lon is either retrieved from cache or added to cache
+            - if the retrieved information either from the cache or from NWS is null, then respond with "error_datasource"
+            - in the case of NumberFormatException if the inputs are not doubles, respond with "error_bad_request"
+            - in the case of other Exceptions, respond with "error_internal"
     - *Servers*
         - *LoadedFiles*
             - field: generic type storage
@@ -105,6 +155,8 @@
         - SearchSuccessResponse: column header
         - SearchSuccessResponse: single row
         - SearchSuccessResponse: multiple rows
+    - **Weather**
+  
 ## How To
 - **Run the Tests**
     - JUnit test
@@ -115,4 +167,29 @@
     - Then implement the server
 - **Run our program**
     - enter "localhost:3232/" in the browser
-    - enter endpoints and queries into the api
+    - "loadcsv": enter "loadcsv" as endpoint, then specify the filepath with the query "filepath"
+    - "viewcsv": enter "viewcsv" as endpoint. Remember to load csv before viewing it
+    - "searchcsv": enter "searchcsv" as endpoint
+        - specify the column index/header with the query "column"
+        - specify the value to search for with the query "value"
+    - "weather": enter "weather" as endpoint
+        - specify the latitude of the target location with the query "lat"
+        - specify the longitude of the target location with the query "lon"
+- **Control the cache-matching and cache-eviction for weather requests**
+    -  *Cache-matching*
+        - Caching is created by mapping the record WeatherResponse to a List of Doubles
+        - Cache matching can be controlled by controlling or changing the following key and value
+        - key: List of Doubles containing two numbers that represent the coordinates of a location
+            - the first double in the list is the latitude of the location
+            - the second double in the list is the longitude of the location
+        - value: 
+            - WeatherResponse is created by creating a PlainRequester from a String gridUrl
+            - a GridResponse is created by deserializing the Json information retrieved from the webpage of the gridUrl
+            - a String is created by getting the Json forecast of the GridResponse
+            - a WeatherResponse is created by deserializing the Json forecast
+    - *Cache-eviction*
+        - cache eviction is achieved by the method getForecast in the class WeatherCachingProxy from directory Weather
+        - cache eviction can be controlled by controling or changing the following: 
+        - the distance between the location representing by the given latitude and longitude and each of the cached locations are calculated
+        - if the distance is small enough(criteria can be controlled by developer), then cached information is evicted
+        - if the distance is not small enough, then information is retrieved from NWS and then a newly matched map is cached

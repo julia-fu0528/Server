@@ -78,7 +78,13 @@ public class WeatherCachingProxy {
                         });
     }
 
-
+    /**
+     * gets weather forecast from the given location
+     * @param lat a double representing the latitude of the location
+     * @param lon a double representing the longitude of the location
+     * @return a record Forecast representing the weather forecast information from NWS
+     * @throws ExecutionException
+     */
     public Forecast getForecast(double lat, double lon) throws ExecutionException {
         // calculate distance and determine cache-matching based on developer preference
         for (List<Double> coordinates: this.cache.asMap().keySet()) {

@@ -37,37 +37,6 @@ public class WeatherHandler implements Route {
             return new WeatherSuccessResponse(weatherF.temp(), weatherF.unit(),
                     this.cache.getCurrentTime()).serialize();
 
-
-
-//
-//            if (gridResponse.properties() != null) {
-//                String weatherURL = gridResponse.properties().endpoint();
-//                WeatherResponse wResponse = this.data.getURLWeatherResponse(weatherURL);
-//                if (wResponse.properties() == null) {
-//                    return new WeatherFailureResponse("error_datasource", "Weather data was not available " +
-//                            "for the requested point").serialize();
-//                }
-//                Forecast forecast = wResponse.properties().periods().get(0);
-//                return new WeatherSuccessResponse(forecast.temp(), forecast.unit(), data.getCurrentTime()).serialize();
-//            } else {
-//                //TODO: change
-//                if (gridResponse.coordinates().equals("Data Unavailable For Requested Point")) {
-//                    return new WeatherFailureResponse("error_bad_request", "The request point does not appear" +
-//                            "to be a valid coordinate").serialize();
-//                    //TODO: change
-//                } else if (gridResponse.coordinates().equals("Invalid Parameter")) {
-//                    return new WeatherFailureResponse(
-//                            "error_bad_request",
-//                            "The request point does not appear to be a valid coordinate.")
-//                            .serialize();
-//                } else {
-//                    return new WeatherFailureResponse(
-//                            "error_internal",
-//                            "Received bad response from the grid endpoint. "
-//                                    + "This will be logged internally and investigated.")
-//                            .serialize();
-//                }
-//            }
         } catch (NumberFormatException e) {
             return new WeatherFailureResponse(
                     "error_bad_request", "Failed to parse number values from the request point.")
