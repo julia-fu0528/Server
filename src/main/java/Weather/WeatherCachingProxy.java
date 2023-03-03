@@ -29,6 +29,7 @@ public class WeatherCachingProxy {
      * @param requestor an object to query resources with.
      */
     public WeatherCachingProxy(Requestor requestor) {
+
         this(100, 10, requestor);
     }
 
@@ -51,7 +52,7 @@ public class WeatherCachingProxy {
                                     @NotNull
                                     @Override
                                     public WeatherResponse load(@NotNull String url) throws Exception {
-                                        return requestor.requestAndInstantiate(url, WeatherResponse.class);
+                                        return requestor.requestToInstantiate(url, WeatherResponse.class);
                                     }
                                 });
     }
@@ -73,7 +74,7 @@ public class WeatherCachingProxy {
      * @return gridpoint data retrieved from api.
      */
     public GridResponse getGridResponseByUrl(String url) throws IOException {
-        return this.requestor.requestAndInstantiate(url, GridResponse.class);
+        return this.requestor.requestToInstantiate(url, GridResponse.class);
     }
 
     /**
