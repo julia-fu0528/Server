@@ -8,21 +8,20 @@ import spark.Response;
 import spark.Route;
 
 import java.util.List;
+import java.util.Set;
+
 /**
  * Handler class for the viewcsv API endpoint.
  *
  */
 public class ViewHandler implements Route{
-    public LoadedFiles<List<List<String>>> loaded;
+    public Set<List<List<String>>> loaded;
     /**
      * Constructor accepts some shared state
      */
-    public ViewHandler(){
-        this.loaded = LoadHandler.loaded;
-
-    }
-    public ViewHandler(LoadedFiles<List<List<String>>> loaded){
+    public ViewHandler(Set<List<List<String>>> loaded){
         this.loaded = loaded;
+
     }
     /**
      * handles the csv file to view
@@ -34,13 +33,11 @@ public class ViewHandler implements Route{
     public Object handle(Request request, Response response) throws Exception{
         // retrieves the csv file
         List<List<String>> csv_json;
-        try{
-            csv_json = this.loaded.getFile();
-            return new ViewCSVSuccessResponse(csv_json).serialize();
-        }catch(NoFileStoredException e){
+        csv_json = this.loaded.iterator().next();
             // if no csv has been loaded
+        if(csv_json == null){
             return new ViewCSVFailureResponse().serialize();
-        }
+        }return new ViewCSVSuccessResponse(csv_json).serialize();
     }
     /**
      * Response object to send if viewing csv succees

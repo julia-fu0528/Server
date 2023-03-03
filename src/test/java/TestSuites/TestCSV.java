@@ -7,7 +7,6 @@ import Exceptions.SearchFailureException;
 import Handlers.LoadHandler;
 import Handlers.SearchHandler;
 import Handlers.ViewHandler;
-import MockedData.MockedCSV;
 import Weather.Requester.PlainRequester;
 import Weather.WeatherCachingProxy;
 import Weather.WeatherHandler;
@@ -61,22 +60,7 @@ public class TestCSV {
     @BeforeAll
     public static void setup_before_everything() {
 
-        // Set the Spark port number. This can only be done once, and has to
-        // happen before any route maps are added. Hence using @BeforeClass.
-        // Setting port 0 will cause Spark to use an arbitrary available port.
         Spark.port(0);
-        // Don't try to remember it. Spark won't actually give Spark.port() back
-        // until route mapping has started. Just get the port number later. We're using
-        // a random _free_ port to remove the chances that something is already using a
-        // specific port on the system used for testing.
-
-        // Remove the logging spam during tests
-        //   This is surprisingly difficult. (Notes to self omitted to avoid complicating things.)
-
-        // SLF4J doesn't let us change the logging level directly (which makes sense,
-        //   given that different logging frameworks have different level labels etc.)
-        // Changing the JDK *ROOT* logger's level (not global) will block messages
-        //   (assuming using JDK, not Log4J)
         Logger.getLogger("").setLevel(Level.WARNING); // empty name = root logger
     }
 
@@ -94,10 +78,9 @@ public class TestCSV {
 
         // In fact, restart the entire Spark server for every test!
         Spark.init();
-        Spark.get("/loadcsv", new LoadHandler(new LoadedFiles<List<List<String>>>()));
-        Spark.get("viewcsv", new ViewHandler());
-        Spark.get("/searchcsv", new SearchHandler());
-        Spark.get("/weather", new WeatherHandler());
+        Spark.get("/loadcsv", new LoadHandler(storage));
+        Spark.get("viewcsv", new ViewHandler(storage));
+        Spark.get("/searchcsv", new SearchHandler(storage));
         // Spark.init();
         Spark.awaitInitialization(); // don't continue until the server is listening
     }
@@ -131,63 +114,7 @@ public class TestCSV {
         clientConnection.connect();
         return clientConnection;
     }
-    @Test
-    public void testSuccessEmpty() throws IOException {
-        // tests loadcsv for empty file
-        String emptycsv_query = "loadcsv?filepath=src/main/data/made-example-files/empty.csv";
-        HttpURLConnection clientConnection = tryRequest(emptycsv_query);
-        assertEquals(200, clientConnection.getResponseCode());
 
-        String emptycsv_path = "src/main/data/made-example-files/empty.csv";
-        Moshi moshi = new Moshi.Builder().build();
-        LoadHandler.CSVParsingSuccessResponse response =
-                moshi.adapter(LoadHandler.CSVParsingSuccessResponse.class).
-                        fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
-        assertEquals("success",
-                response.result());
-        assertEquals(emptycsv_path,
-                response.filepath());
-        assertEquals("CSV File'" + emptycsv_path + "' successfully stored. " +
-                        "Contents accessible in endpoint viewcsv",
-                response.message());
-
-        List<List<String>> empty_file;
-        try {
-            empty_file = new CSVParser(new FileReader(emptycsv_path), new ListCreator()).parse();
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-
-        // tests view csv for empty file
-        HttpURLConnection clientConnection_view = tryRequest("viewcsv");
-        assertEquals(200, clientConnection_view.getResponseCode());
-        Moshi moshi_view = new Moshi.Builder().build();
-        ViewHandler.ViewCSVSuccessResponse response_view =
-                moshi.adapter(ViewHandler.ViewCSVSuccessResponse.class).
-                        fromJson(new Buffer().readFrom(clientConnection_view.getInputStream()));
-        assertEquals("success",
-                response_view.result());
-        assertEquals(empty_file,
-                response_view.data());
-        assertEquals("File available for view.",
-                response_view.message());
-        // tests search csv for empty file
-        HttpURLConnection clientConnection_search = tryRequest("searchcsv?column=0&value=julia");
-        assertEquals(200, clientConnection_search.getResponseCode());
-        Moshi moshi_search = new Moshi.Builder().build();
-        SearchHandler.SearchFailureResponse response_search =
-                moshi.adapter(SearchHandler.SearchFailureResponse.class).
-                        fromJson(new Buffer().readFrom(clientConnection_search.getInputStream()));
-        assertEquals("error_datasource",
-                response_search.result());
-        assertEquals("0",
-                response_search.column());
-        assertEquals("julia",
-                response_search.value());
-        assertEquals("Searching 'julia ' at column '0' fails",
-                response_search.message());
-        clientConnection.disconnect();
-    }
     @Test
     public void testSuccessNonempty() throws IOException {
         // test load csv for nonempty file

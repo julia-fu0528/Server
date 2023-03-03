@@ -11,18 +11,19 @@ import spark.Route;
 import java.io.FileReader;
 import java.nio.file.FileSystemNotFoundException;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Handler class for the loadcsv API endpoint.
  *
  */
 public class LoadHandler implements Route {
-    public static LoadedFiles<List<List<String>>> loaded;
+    public Set<List<List<String>>> loaded;
 
     /**
      * Constructor accepts some shared state
      */
-    public LoadHandler(LoadedFiles<List<List<String>>> loaded) {
+    public LoadHandler(Set<List<List<String>>> loaded) {
         this.loaded = loaded;
     }
 
@@ -58,16 +59,16 @@ public class LoadHandler implements Route {
             // parse failure
             return new CSVParsingFailureResponse(filepath).serialize();
         }
-        this.loaded.storeFile(csv_json);
+        this.loaded.add(csv_json);
         // parse success
         return new CSVParsingSuccessResponse(filepath).serialize();
     }
     /**
      * Set the instance variable loaded with a LoadedFile
      */
-    public void setLoaded(LoadedFiles<List<List<String>>> csv){
-        this.loaded = csv;
-    }
+//    // public void setLoaded(LoadedFiles<List<List<String>>> csv){
+//        this.loaded = csv;
+//    }
 
     /**
      * Response object to send if the filepath is invalid

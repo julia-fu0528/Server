@@ -54,22 +54,7 @@ public class TestView {
     @BeforeAll
     public static void setup_before_everything() {
 
-        // Set the Spark port number. This can only be done once, and has to
-        // happen before any route maps are added. Hence using @BeforeClass.
-        // Setting port 0 will cause Spark to use an arbitrary available port.
         Spark.port(0);
-        // Don't try to remember it. Spark won't actually give Spark.port() back
-        // until route mapping has started. Just get the port number later. We're using
-        // a random _free_ port to remove the chances that something is already using a
-        // specific port on the system used for testing.
-
-        // Remove the logging spam during tests
-        //   This is surprisingly difficult. (Notes to self omitted to avoid complicating things.)
-
-        // SLF4J doesn't let us change the logging level directly (which makes sense,
-        //   given that different logging frameworks have different level labels etc.)
-        // Changing the JDK *ROOT* logger's level (not global) will block messages
-        //   (assuming using JDK, not Log4J)
         Logger.getLogger("").setLevel(Level.WARNING); // empty name = root logger
     }
 
@@ -86,10 +71,9 @@ public class TestView {
         storage.clear();
 
         // In fact, restart the entire Spark server for every test!
-        Spark.get("/loadcsv", new LoadHandler(new LoadedFiles<List<List<String>>>()));
-        Spark.get("viewcsv", new ViewHandler());
-        Spark.get("/searchcsv", new SearchHandler());
-        Spark.get("/weather", new WeatherHandler());
+        Spark.get("/loadcsv", new LoadHandler(storage));
+        Spark.get("viewcsv", new ViewHandler(storage));
+        Spark.get("/searchcsv", new SearchHandler(storage));
         Spark.init();
         Spark.awaitInitialization(); // don't continue until the server is listening
     }

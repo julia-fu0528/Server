@@ -1,13 +1,17 @@
 package TestSuites;
 
+import CSV.Algos.CSVParser;
+import CSV.Algos.Search;
+import CSV.RowCreators.RowCreator.ListCreator;
+import Exceptions.SearchFailureException;
 import Handlers.LoadHandler;
 import Handlers.SearchHandler;
 import Handlers.ViewHandler;
-import Servers.LoadedFiles;
 import Weather.Requester.PlainRequester;
 import Weather.WeatherCachingProxy;
 import Weather.WeatherHandler;
 import com.squareup.moshi.Moshi;
+import Servers.LoadedFiles;
 import okio.Buffer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -15,6 +19,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import spark.Spark;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -50,7 +56,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * 6. SearchSuccessResponse: single row
  * 7. SearchSuccessResponse: multiple rows
  */
-public class TestSearch {
+public class TestEmpty {
     @BeforeAll
     public static void setup_before_everything() {
 
@@ -64,17 +70,21 @@ public class TestSearch {
      */
 
     final Set<List<List<String>>> storage = new HashSet<>();
-
+    String emptycsv_query = "loadcsv?filepath=src/main/data/made-example-files/empty.csv";
+    String emptycsv_path = "src/main/data/made-example-files/empty.csv";
     @BeforeEach
-    public void setup() {
+    public void setup() throws FileNotFoundException {
         // Re-initialize state, etc. for _every_ test method run
         storage.clear();
 
+        List<List<String>> empty_file = new CSVParser(new FileReader(emptycsv_path), new ListCreator()).parse();
+        this.storage.add(empty_file);
         // In fact, restart the entire Spark server for every test!
+        Spark.init();
         Spark.get("/loadcsv", new LoadHandler(storage));
         Spark.get("viewcsv", new ViewHandler(storage));
         Spark.get("/searchcsv", new SearchHandler(storage));
-        Spark.init();
+        // Spark.init();
         Spark.awaitInitialization(); // don't continue until the server is listening
     }
 
@@ -108,36 +118,78 @@ public class TestSearch {
         return clientConnection;
     }
     @Test
-    public void testSearchNoColumn() throws IOException {
-        HttpURLConnection clientConnection = tryRequest("searchcsv");
+    public void testViewEmpty() throws IOException {
+        HttpURLConnection clientConnection = tryRequest(emptycsv_query);
         assertEquals(200, clientConnection.getResponseCode());
 
         Moshi moshi = new Moshi.Builder().build();
-        SearchHandler.MissingColumnResponse response =
-                moshi.adapter(SearchHandler.MissingColumnResponse.class).
+        LoadHandler.CSVParsingSuccessResponse response =
+                moshi.adapter(LoadHandler.CSVParsingSuccessResponse.class).
                         fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
-
-        assertEquals("error_bad_request",
+        assertEquals("success",
                 response.result());
-        assertEquals("Missing column query",
+        assertEquals(emptycsv_path,
+                response.filepath());
+        assertEquals("CSV File'" + emptycsv_path + "' successfully stored. " +
+                        "Contents accessible in endpoint viewcsv",
                 response.message());
+
+        List<List<String>> empty_file;
+        try {
+            empty_file = new CSVParser(new FileReader(emptycsv_path), new ListCreator()).parse();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        // tests view csv for empty file
+        HttpURLConnection clientConnection_view = tryRequest("viewcsv");
+        assertEquals(200, clientConnection_view.getResponseCode());
+        Moshi moshi_view = new Moshi.Builder().build();
+        ViewHandler.ViewCSVSuccessResponse response_view =
+                moshi.adapter(ViewHandler.ViewCSVSuccessResponse.class).
+                        fromJson(new Buffer().readFrom(clientConnection_view.getInputStream()));
+        assertEquals("success",
+                response_view.result());
+        assertEquals(empty_file,
+                response_view.data());
+        assertEquals("File available for view.",
+                response_view.message());
+        // tests search csv for empty file
+        HttpURLConnection clientConnection_search = tryRequest("searchcsv?column=0&value=julia");
+        assertEquals(200, clientConnection_search.getResponseCode());
+        Moshi moshi_search = new Moshi.Builder().build();
+        SearchHandler.SearchFailureResponse response_search =
+                moshi.adapter(SearchHandler.SearchFailureResponse.class).
+                        fromJson(new Buffer().readFrom(clientConnection_search.getInputStream()));
+        assertEquals("error_datasource",
+                response_search.result());
+        assertEquals("0",
+                response_search.column());
+        assertEquals("julia",
+                response_search.value());
+        assertEquals("Searching 'julia ' at column '0' fails",
+                response_search.message());
         clientConnection.disconnect();
     }
     @Test
-    public void testSearchNoValue() throws IOException {
-        HttpURLConnection clientConnection = tryRequest("searchcsv?column=\'Name\'");
+    public void testSearchEmpty() throws IOException {
+        HttpURLConnection clientConnection = tryRequest(emptycsv_query);
         assertEquals(200, clientConnection.getResponseCode());
 
-        Moshi moshi = new Moshi.Builder().build();
-        SearchHandler.MissingValueResponse response =
-                moshi.adapter(SearchHandler.MissingValueResponse.class).
-                        fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
-
-        assertEquals("error_bad_request",
-                response.result());
-        assertEquals("Missing value query",
-                response.message());
+        HttpURLConnection clientConnection_search = tryRequest("searchcsv?column=0&value=julia");
+        assertEquals(200, clientConnection_search.getResponseCode());
+        Moshi moshi_search = new Moshi.Builder().build();
+        SearchHandler.SearchFailureResponse response_search =
+                moshi_search.adapter(SearchHandler.SearchFailureResponse.class).
+                        fromJson(new Buffer().readFrom(clientConnection_search.getInputStream()));
+        assertEquals("error_datasource",
+                response_search.result());
+        assertEquals("0",
+                response_search.column());
+        assertEquals("julia",
+                response_search.value());
+        assertEquals("Searching 'julia ' at column '0' fails",
+                response_search.message());
         clientConnection.disconnect();
     }
-
 }

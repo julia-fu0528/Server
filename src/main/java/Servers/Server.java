@@ -24,7 +24,7 @@ import java.util.Set;
  */
 public class Server {
     public static void main(String[] args) {
-        Set<BufferedReader> storage = new HashSet<>();
+        Set<List<List<String>>> storage = new HashSet<>();
         Spark.port(3232);
         after((request, response) -> {
             response.header("Access-Control-Allow-Origin", "*");
@@ -32,9 +32,9 @@ public class Server {
         });
 
         // Setting up the handler for the four different endpoints
-        Spark.get("loadcsv", new LoadHandler(new LoadedFiles<List<List<String>>>()));
-        Spark.get("viewcsv", new ViewHandler());
-        Spark.get("searchcsv", new SearchHandler());
+        Spark.get("loadcsv", new LoadHandler(storage));
+        Spark.get("viewcsv", new ViewHandler(storage));
+        Spark.get("searchcsv", new SearchHandler(storage));
         Spark.get("weather", new WeatherHandler());
         Spark.init();
         Spark.awaitInitialization();

@@ -9,17 +9,19 @@ import spark.Response;
 import spark.Route;
 
 import java.util.List;
+import java.util.Set;
+
 /**
  * Handler class for the searchcsv API endpoint.
  *
  */
 public class SearchHandler implements Route {
-    public LoadedFiles<List<List<String>>> loaded;
+    public Set<List<List<String>>> loaded;
     /**
      * Constructor accepts some shared state
      */
-    public SearchHandler() {
-        this.loaded = LoadHandler.loaded;
+    public SearchHandler(Set<List<List<String>>> loaded) {
+        this.loaded = loaded;
     }
     /**
      * handles the csv file to view
@@ -41,7 +43,7 @@ public class SearchHandler implements Route {
             return new MissingValueResponse().serialize();
         }
         try {
-            Search searcher = new Search(this.loaded.storage);
+            Search searcher = new Search(this.loaded.iterator().next());
             data = searcher.searchTarget(column, value);
         } catch (SearchFailureException e) {
             // if searching fails
