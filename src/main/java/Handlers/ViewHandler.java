@@ -33,7 +33,13 @@ public class ViewHandler implements Route{
     public Object handle(Request request, Response response) throws Exception{
         // retrieves the csv file
         List<List<String>> csv_json;
-        csv_json = this.loaded.iterator().next();
+        try{
+            csv_json = this.loaded.iterator().next();
+        }catch(Exception e){
+            return new ViewCSVFailureResponse().serialize();
+
+        }
+
             // if no csv has been loaded
         if(csv_json == null){
             return new ViewCSVFailureResponse().serialize();

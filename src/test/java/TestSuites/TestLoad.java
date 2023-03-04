@@ -154,4 +154,49 @@ public class TestLoad {
                 response.message());
         clientConnection.disconnect();
     }
+    @Test
+    public void testSuccessEmpty() throws IOException {
+        // tests loadcsv for empty file
+        String emptycsv_query = "loadcsv?filepath=src/main/data/made-example-files/empty.csv";
+        HttpURLConnection clientConnection = tryRequest(emptycsv_query);
+        assertEquals(200, clientConnection.getResponseCode());
+
+        String emptycsv_path = "src/main/data/made-example-files/empty.csv";
+        Moshi moshi = new Moshi.Builder().build();
+        LoadHandler.CSVParsingSuccessResponse response =
+                moshi.adapter(LoadHandler.CSVParsingSuccessResponse.class).
+                        fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
+        assertEquals("success",
+                response.result());
+        assertEquals(emptycsv_path,
+                response.filepath());
+        assertEquals("CSV File'" + emptycsv_path + "' successfully stored. " +
+                        "Contents accessible in endpoint viewcsv",
+                response.message());
+
+        clientConnection.disconnect();
+    }
+    @Test
+    public void testSuccessNonempty() throws IOException {
+        // test load csv for nonempty file
+        String stardata_query = "loadcsv?filepath=src/main/data/stars/stardata.csv";
+        String stardata_path = "src/main/data/stars/stardata.csv";
+        HttpURLConnection clientConnection = tryRequest(stardata_query);
+        assertEquals(200, clientConnection.getResponseCode());
+
+        Moshi moshi = new Moshi.Builder().build();
+        LoadHandler.CSVParsingSuccessResponse response =
+                moshi.adapter(LoadHandler.CSVParsingSuccessResponse.class).
+                        fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
+        assertEquals("success",
+                response.result());
+        assertEquals(stardata_path,
+                response.filepath());
+        assertEquals("CSV File'" + stardata_path + "' successfully stored. " +
+                        "Contents accessible in endpoint viewcsv",
+                response.message());
+
+
+        clientConnection.disconnect();
+    }
 }

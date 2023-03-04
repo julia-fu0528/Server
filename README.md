@@ -125,10 +125,9 @@
         - given example files: stardata and ten-star csv
 - **test Directory**
     - *TestSuites*
-        - TestCSV: tests "loadcsv" + "viewcsv" + "searchcsv" success
-        - TestLoad: tests "loadcsv" edge cases : failure/exception response
-        - TestView: tests "viewcsv" edge cases : failure/exception response
-        - TestSearch: tests "searchcsv" edge cases : failure/exception response
+        - TestLoad: tests "loadcsv"
+        - TestView: tests "viewcsv" 
+        - TestSearch: tests "searchcsv" 
         - TestWeather: tests "weather"
       
 ## Errors/Bugs
@@ -156,6 +155,12 @@
         - SearchSuccessResponse: single row
         - SearchSuccessResponse: multiple rows
     - **Weather**
+        - WeatherSuccessResponse: correct input
+        - WeatherSuccessResponse: very long coordinates
+        - WeatherFailureResponse: invalid coordinates
+        - WeatherFailureResponse: missing latitude
+        - WeatherFailureResponse: missing longitude
+        - WeatherFailureResponse: input coordinates as strings
   
 ## How To
 - **Run the Tests**

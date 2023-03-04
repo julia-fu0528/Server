@@ -1,5 +1,9 @@
 package TestSuites;
 
+import CSV.Algos.CSVParser;
+import CSV.Algos.Search;
+import CSV.RowCreators.RowCreator.ListCreator;
+import Exceptions.SearchFailureException;
 import Handlers.LoadHandler;
 import Handlers.SearchHandler;
 import Handlers.ViewHandler;
@@ -15,6 +19,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import spark.Spark;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -51,6 +57,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * 7. SearchSuccessResponse: multiple rows
  */
 public class TestSearch {
+    public TestSearch() throws FileNotFoundException {
+    }
+
     @BeforeAll
     public static void setup_before_everything() {
 
@@ -64,7 +73,15 @@ public class TestSearch {
      */
 
     final Set<List<List<String>>> storage = new HashSet<>();
-
+    String headers_empty_query = "loadcsv?filepath=src/main/data/made-example-files/empty-with-headers.csv";
+    String headers_empty_path = "src/main/data/made-example-files/empty-with-headers.csv";
+    List<List<String>> headers_empty_file= new CSVParser(new FileReader(headers_empty_path), new ListCreator()).parse();
+    String noheaders_people_query = "loadcsv?filepath=src/main/data/made-example-files/people-has-header.csv";
+    String noheaders_people_path = "src/main/data/made-example-files/people-has-header.csv";
+    List<List<String>> noheaders_people_file = new CSVParser(new FileReader(noheaders_people_path), new ListCreator()).parse();
+    String stardata_query = "loadcsv?filepath=src/main/data/stars/stardata.csv";
+    String stardata_path = "src/main/data/stars/stardata.csv";
+    List<List<String>> stardata_file = new CSVParser(new FileReader(stardata_path), new ListCreator()).parse();
     @BeforeEach
     public void setup() {
         // Re-initialize state, etc. for _every_ test method run
@@ -139,5 +156,96 @@ public class TestSearch {
                 response.message());
         clientConnection.disconnect();
     }
+    @Test
+    public void testValueNotFound() throws IOException {
+        this.storage.add(headers_empty_file);
+        HttpURLConnection clientConnection = tryRequest(headers_empty_query);
+        assertEquals(200, clientConnection.getResponseCode());
 
+        // tests search csv for nonempty file, value not found, search column header
+        HttpURLConnection clientConnection_search = tryRequest("searchcsv?column=First+Name&value=Rory");
+        assertEquals(200, clientConnection_search.getResponseCode());
+        Moshi moshi_search = new Moshi.Builder().build();
+        SearchHandler.ValueNotFoundResponse response_search =
+                moshi_search.adapter(SearchHandler.ValueNotFoundResponse.class).
+                        fromJson(new Buffer().readFrom(clientConnection_search.getInputStream()));
+        assertEquals("error.json",
+                response_search.result());
+        assertEquals("First Name",
+                response_search.column());
+        assertEquals("Rory",
+                response_search.value());
+        assertEquals("The value ' Rory' can't be found at column First Name",
+                response_search.message());
+
+        clientConnection.disconnect();
+    }
+    @Test
+    public void testSuccessMultipleRows() throws IOException {
+        this.storage.add(noheaders_people_file);
+        HttpURLConnection clientConnection = tryRequest(noheaders_people_query);
+        assertEquals(200, clientConnection.getResponseCode());
+
+        List<List<String>> people_searched;
+        try {
+            people_searched = new Search(noheaders_people_file).searchTarget("3", "student");
+        } catch (SearchFailureException e) {
+            throw new RuntimeException(e);
+        }
+
+        // tests search csv for nonempty file, search column index, value present multiple times
+        HttpURLConnection clientConnection_search = tryRequest("searchcsv?column=3&value=student");
+        assertEquals(200, clientConnection_search.getResponseCode());
+        Moshi moshi_search = new Moshi.Builder().build();
+        SearchHandler.SearchSuccessResponse response_search =
+                moshi_search.adapter(SearchHandler.SearchSuccessResponse.class).
+                        fromJson(new Buffer().readFrom(clientConnection_search.getInputStream()));
+        assertEquals("success",
+                response_search.result());
+        assertEquals(people_searched,
+                response_search.data());
+        assertEquals("3",
+                response_search.column());
+        assertEquals("student",
+                response_search.value());
+        assertEquals("Value successfully searched",
+                response_search.message());
+
+        clientConnection.disconnect();
+    }
+    @Test
+    public void testSuccessNonempty() throws IOException {
+        this.storage.add(stardata_file);
+        // test load csv for nonempty file
+        HttpURLConnection clientConnection = tryRequest(stardata_query);
+        assertEquals(200, clientConnection.getResponseCode());
+
+
+        List<List<String>> star_searched;
+        try {
+            star_searched = new Search(stardata_file).searchTarget("ProperName", "Rory");
+        } catch (SearchFailureException e) {
+            throw new RuntimeException(e);
+        }
+
+        // tests search csv for nonempty file, search column header, value present once
+        HttpURLConnection clientConnection_search = tryRequest("searchcsv?column=ProperName&value=Rory");
+        assertEquals(200, clientConnection_search.getResponseCode());
+        Moshi moshi_search = new Moshi.Builder().build();
+        SearchHandler.SearchSuccessResponse response_search =
+                moshi_search.adapter(SearchHandler.SearchSuccessResponse.class).
+                        fromJson(new Buffer().readFrom(clientConnection_search.getInputStream()));
+        assertEquals("success",
+                response_search.result());
+        assertEquals(star_searched,
+                response_search.data());
+        assertEquals("ProperName",
+                response_search.column());
+        assertEquals("Rory",
+                response_search.value());
+        assertEquals("Value successfully searched",
+                response_search.message());
+
+        clientConnection.disconnect();
+    }
 }

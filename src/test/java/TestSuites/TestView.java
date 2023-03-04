@@ -1,5 +1,7 @@
 package TestSuites;
 
+import CSV.Algos.CSVParser;
+import CSV.RowCreators.RowCreator.ListCreator;
 import Handlers.LoadHandler;
 import Handlers.SearchHandler;
 import Handlers.ViewHandler;
@@ -15,6 +17,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import spark.Spark;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -51,6 +55,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * 7. SearchSuccessResponse: multiple rows
  */
 public class TestView {
+    public TestView() throws FileNotFoundException {
+    }
+
     @BeforeAll
     public static void setup_before_everything() {
 
@@ -64,7 +71,12 @@ public class TestView {
      */
 
     final Set<List<List<String>>> storage = new HashSet<>();
-
+    String emptycsv_query = "loadcsv?filepath=src/main/data/made-example-files/empty.csv";
+    String emptycsv_path = "src/main/data/made-example-files/empty.csv";
+    List<List<String>> empty_file = new CSVParser(new FileReader(emptycsv_path), new ListCreator()).parse();
+    String stardata_query = "loadcsv?filepath=src/main/data/stars/stardata.csv";
+    String stardata_path = "src/main/data/stars/stardata.csv";
+    List<List<String>> stardata_file = new CSVParser(new FileReader(stardata_path), new ListCreator()).parse();
     @BeforeEach
     public void setup() {
         // Re-initialize state, etc. for _every_ test method run
@@ -123,21 +135,47 @@ public class TestView {
                 response.message());
         clientConnection.disconnect();
     }
-//    @Test
-//    public void testViewSuccessEmpty() throws IOException {
-//        HttpURLConnection clientConnection = tryRequest("viewcsv");
-//        assertEquals(200, clientConnection.getResponseCode());
-//
-//        // ViewHandler(new LoadedFiles().storeFile(new CSVParser(new FileReader(MockedCSV.emptycsv_path), new ListCreator()).parse()));
-//        Moshi moshi = new Moshi.Builder().build();
-//        ViewHandler.ViewCSVFailureResponse response =
-//                moshi.adapter(ViewHandler.ViewCSVFailureResponse.class).
-//                        fromJson(new Buffer().readFrom(clientConnection.getInputStream()));
-//
-//        assertEquals("error_datasource",
-//                response.result());
-//        assertEquals("No CSV file stored yet.",
-//                response.message());
-//        clientConnection.disconnect();
-//    }
+    @Test
+    public void testViewEmpty() throws IOException {
+        this.storage.add(empty_file);
+        // tests view csv for empty file
+        HttpURLConnection clientConnection_view = tryRequest("viewcsv");
+        assertEquals(200, clientConnection_view.getResponseCode());
+        Moshi moshi_view = new Moshi.Builder().build();
+        ViewHandler.ViewCSVSuccessResponse response_view =
+                moshi_view.adapter(ViewHandler.ViewCSVSuccessResponse.class).
+                        fromJson(new Buffer().readFrom(clientConnection_view.getInputStream()));
+        assertEquals("success",
+                response_view.result());
+        assertEquals(empty_file,
+                response_view.data());
+        assertEquals("File available for view.",
+                response_view.message());
+
+        clientConnection_view.disconnect();
+    }
+
+    @Test
+    public void testViewNonempty() throws IOException {
+        // test load csv for nonempty file
+        this.storage.add(stardata_file);
+        HttpURLConnection clientConnection = tryRequest(stardata_query);
+        assertEquals(200, clientConnection.getResponseCode());
+
+        // tests view csv for nonempty file
+        HttpURLConnection clientConnection_view = tryRequest("viewcsv");
+        assertEquals(200, clientConnection_view.getResponseCode());
+        Moshi moshi_view = new Moshi.Builder().build();
+        ViewHandler.ViewCSVSuccessResponse response_view =
+                moshi_view.adapter(ViewHandler.ViewCSVSuccessResponse.class).
+                        fromJson(new Buffer().readFrom(clientConnection_view.getInputStream()));
+        assertEquals("success",
+                response_view.result());
+        assertEquals(stardata_file,
+                response_view.data());
+        assertEquals("File available for view.",
+                response_view.message());
+
+        clientConnection.disconnect();
+    }
 }
